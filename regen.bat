@@ -1,0 +1,1 @@
+pio project init --ide clion
