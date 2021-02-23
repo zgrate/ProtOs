@@ -9,7 +9,7 @@
 #define THERMOMETER_SUPPORT
 #define FAN_SUPPORT
 #define WS_SUPPORT
-//#define OLED_SUPPORT
+#define OLED_SUPPORT
 
 //TEST MODE - CONNECT ESP THROUGH SERIAL AND CHECK IF EVERYTHING WORKS
 #define TEST_MODE
@@ -69,7 +69,7 @@
 #define PxMATRIX_GLOBAL_INSTANCE
 
 // Defines how long we display things by default
-#define PxMATRIX_SHOWTIME 50
+#define PxMATRIX_SHOWTIME 40
 
 // Defines the speed of the spiClass bus (reducing this may help if you experience noisy images)
 #define PxMATRIX_SPI_FREQUENCY 15000000
@@ -96,10 +96,13 @@
 #define PxMATRIX_ROW_PATTERN 16
 
 //Default brightness of Matrix (0-255)
-#define PxMATRIX_DEFAULT_BRIGHTNESS 100
+#define PxMATRIX_DEFAULT_BRIGHTNESS 20
 
 //Mux delay of PX Matrix
 #define PxMATRIX_MUX_DELAY 10
+
+//FULLBRIGHTNESS TEST
+//#define PxMATRIX_FULLBRIGHTNESS
 
 //MAX7219 Settings
 //Frequency of SPI used for MAX7219
@@ -119,10 +122,15 @@
 #define MAX_MAXFPS 30
 
 //Default MAX brightness
-#define MAX_DEFAULT_BRIGHTNESS 0
+#define MAX_DEFAULT_BRIGHTNESS 3
 
 //Global MAX7219 Instance
 #define MAX_GLOBAL_INSTANCE
+
+//Unfortunately, MAX matrices need to be initialized.
+// If you experience blocks of MAXes (for example screen getting fullbrigthness), you can define,
+// how often the system will send startup commands to maxes (in milliseconds)
+#define MAX_STARTUP_REFRESH 10000
 
 //Performs test of all leds, turning them on at max power
 //#define MAX_FULLPOWER_TEST
@@ -137,7 +145,7 @@
 #define WS_HEIGHT 8
 
 //Default brightness of WS
-#define WS_DEFAULT_BRIGHTNESS 20
+#define WS_DEFAULT_BRIGHTNESS 10
 
 //If create global instance
 #define WS_GLOBAL_INSTANCE

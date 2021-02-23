@@ -58,6 +58,8 @@ public:
 
     int getFPS();
 
+    void writeFrameFromBuffer(uint8_t *frameStartAddress, int frameLength);
+
 private:
 
     int offsets[MAX_WIDTH*8][MAX_HEIGHT*8];
@@ -68,6 +70,8 @@ private:
     uint8_t _spiSS;
     uint8_t _height;
     uint8_t _width;
+    unsigned long lastStartupCommandsSend = 0;
+
     bool _initialized = false;
     SPIClass _spiClass;
     connType _connectionType;
@@ -164,6 +168,7 @@ Max7219::Max7219(uint8_t width, uint8_t height, uint8_t numberOfMatrices, connTy
 }
 
 void Max7219::sendStartupCommands() {
+    lastStartupCommandsSend = millis();
     sendCommand(MAX7219_TEST, 0x00);
     sendCommand(MAX7219_DECODE_MODE, 0x00); // Disable BCD mode.
     sendCommand(MAX7219_BRIGHTNESS, MAX_DEFAULT_BRIGHTNESS);  // Use lowest intensity.
@@ -195,6 +200,16 @@ void Max7219::drawPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 void Max7219::display() {
+
+    if(millis()-lastStartupCommandsSend >= MAX_STARTUP_REFRESH)
+    {
+        Serial.println("REFRESH");
+        pinMode(_spiClk, OUTPUT);
+        pinMode(_spiSS, OUTPUT);
+        pinMode(_spiMosi, OUTPUT);
+        sendStartupCommands();
+        delayMicroseconds(100);
+    }
     for(int i = 1; i < 9; i++){
         digitalWrite(_spiSS, LOW);
         //for(int dev = 0; dev < _width*_height; dev++){
@@ -292,6 +307,25 @@ bool Max7219::isDisplayTaskRunning() {
 
 int Max7219::getFPS() {
     return _fps;
+}
+
+void Max7219::writeFrameFromBuffer(uint8_t *frameStartAddress, int frameLength) {
+//    Serial.print("WRITING ");
+//    Serial.print((unsigned long)frameStartAddress);
+//    Serial.print(" with length ");
+//    Serial.println(frameLength);
+//    for(int i = 0 ; i < frameLength; i++)
+//    {
+////        Serial.print("Before ");
+////        Serial.print(_buffer[i]);
+//
+//        _buffer[i] = *(frameStartAddress+i);
+////        Serial.print(" After ");
+////        Serial.print(_buffer[i]);
+////        Serial.println(" ");
+//    }
+    memcpy(_buffer, frameStartAddress, frameLength);
+    display();
 }
 
 

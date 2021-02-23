@@ -22,18 +22,30 @@
 void executeTests()
 {
     Serial.println("STARTING TESTS....");
-    ThermometerControlInstance.test();
-    WsControlInstance.test();
-    Max7219ControlInstance.test();
-    PxMatrixControlInstance.test();
-    FanControlInstance.test();
+    //ThermometerControlInstance.test();
+    //WsControlInstance.test();
+  //  Max7219ControlInstance.test();
+    //PxMatrixControlInstance.test();
+   // FanControlInstance.test();
     testSD();
 #ifdef OLED_SUPPORT //TODO TEST MUST ME MADE USING I2C SCANNER
     OledControlInstance.test();
 #endif
     Serial.println("TEST COMPLETED!");
-}
+};
 
+void dw(int pin)
+{
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, 1);
+};
+
+void testPins()
+{
+    for(int i = 1; i < 40; i++) {
+        dw(i);
+    }
+};
 
 #endif
 #endif //VISORV3_TESTMODE_H
