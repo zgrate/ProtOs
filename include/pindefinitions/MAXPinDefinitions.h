@@ -1,0 +1,8 @@
+//
+// Created by dzing on 26/02/2021.
+//
+
+#ifndef VISORV3_MAXPINDEFINITIONS_H
+#define VISORV3_MAXPINDEFINITIONS_H
+
+#endif //VISORV3_MAXPINDEFINITIONS_H
