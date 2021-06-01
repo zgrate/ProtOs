@@ -9,19 +9,67 @@
 #include "control/BluetoothManager.h"
 #include "control/ControlFunctions.h"
 #include "libraries/Max7219.h"
+
 MainSystem MAIN = MainSystem();
+INA219 CurrentControlCenter = INA219();
 
+TaskHandle_t Task1;
 
+void initCurrentMeter() {
+    CurrentControlCenter.begin();
+    CurrentControlCenter.configure(INA219_RANGE_32V, INA219_GAIN_320MV, INA219_BUS_RES_12BIT,
+                                   INA219_SHUNT_RES_12BIT_1S);
+    CurrentControlCenter.calibrate(SHUNT_OHM, SHUNT_VOLTAGE);
+    Serial.println(CurrentControlCenter.readBusVoltage());
+    Serial.println(CurrentControlCenter.readShuntCurrent());
+}
+
+String readVoltageCurrent() {
+    return String(CurrentControlCenter.readBusVoltage()) + "?" + String(CurrentControlCenter.readShuntCurrent());
+}
+
+void mainTask(void *pvParameters) {
+    Serial.print("Task1 running on core ");
+    Serial.println(xPortGetCoreID());
+    initCurrentMeter();
+    WifiManagerInstance.connect();
+    for (;;) {
+        //MAIN.mainDisplayLoop();
+        WifiManagerInstance.loop();
+        vTaskDelay(100);
+        yield();
+    }
+}
 
 void MainSystem::setup() {
     //testSD();
 
 //    testSD();
     //initializeSDCard();
-    testPins();
-    return;
+    //testPins();
+    //return;
+
+
     executeTests();
     //loadNewFile("blob.zgd");
+    xTaskCreatePinnedToCore(
+            mainTask,   /* Task function. */
+            "Task1",     /* name of task. */
+            10000,       /* Stack size of task */
+            nullptr,        /* parameter of the task */
+            1,           /* priority of the task */
+            &Task1,      /* Task handle to keep track of created task */
+            0);          /* pin task to core 0 */
+//    Max7219ControlInstance.begin();
+//    Max7219ControlInstance.drawTestPattern();
+//    delay(1000);
+//    Max7219ControlInstance.drawTestPattern();
+//    delay(1000);
+//    Max7219ControlInstance.drawTestPattern();
+    return;
+    Max7219ControlInstance.writeFillRect(0, 0, 10, 10, 255);
+    Max7219ControlInstance.display();
+    //
     //data->printContents();
     return;
 
@@ -37,19 +85,31 @@ void MainSystem::setup() {
     PxMatrixControlInstance.drawPixel(0, 0, PxMatrixControlInstance.white);
     playAnimationOnRepeat();
     //Max7219ControlInstance.drawTestPattern();
-   // BluetoothClientInstance.setupBLE();
-   // PxMatrixControlInstance.test();
+    // BluetoothClientInstance.setupBLE();
+    // PxMatrixControlInstance.test();
 }
+
 unsigned long loopTime = 0;
 
 unsigned long lastTick = 0;
+
+unsigned long testTimer = 0;
+
 void MainSystem::loop() {
+
+    //delay(1000);//
+//    testTimer = micros();
+    PxMatrixControlInstance.display();
+//    Serial.println(micros()-testTimer);
+    // #Max7219ControlInstance.drawTestPattern();
+
+//    vTaskDelay(10);
+    return;
     //BluetoothClientInstance.loopBLE();
     //yield();
     //Serial.println(lastTime);
-    //mainDisplayLoop();
-    if((millis() - lastTick) >= 1000)
-    {
+    //
+    if ((millis() - lastTick) >= 1000) {
         lastTick = millis();
         Serial.println(loopTime);
     }
@@ -67,8 +127,14 @@ void MainSystem::loadNewFile(String filename) {
     currentFramePx = 0;
     currentFrameMax = 0;
     currentFrameWs = 0;
-    frameTime = 1000/data->getFPS();
+    frameTime = 1000 / data->getFPS();
 
+}
+
+void MainSystem::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
+    if (packet->getPipeline() == PacketPipeline::WIFI) {
+        WifiManagerInstance.sendPacket(packet);
+    }
 }
 
 void MainSystem::initializeAllHardware() {
@@ -120,15 +186,53 @@ void MainSystem::mainDisplayLoop() {
 
             WsControlInstance.writeFrameFromBuffer(data->getWSFrameStartAddress(0), data->getWsFrameSize());
             currentFrameWs++;
-            if(currentFrameWs >= data->getWsFrames())
-            {
+            if (currentFrameWs >= data->getWsFrames()) {
                 currentFrameWs = 0;
             }
         }
-        loopTime = micros()-start;
+        loopTime = micros() - start;
     }
 }
 
+void MainSystem::liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector) {
+    switch (screenId) { //TODO
+        default:
+            if (PxMatrixControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                PxMatrixControlInstance.drawPixels(vector);
+            }
+    }
+}
+
+void MainSystem::clearDisplay(const uint8_t &screenId) {
+    switch (screenId) { //TODO
+        default:
+            PxMatrixControlInstance.clearDisplay();
+    }
+}
+
+String MainSystem::readSensor(const uint8_t &sensorId, uint8_t *type) {
+    //TODO: Map sensors dynamically
+    if (sensorId == 1) { //TEMPERATURE_HUMIDITY
+        *type = SensorType::TEMPERATURE_HUMIDITY;
+        return ThermometerControlInstance.getTemperatureAndHumidity();
+    } else if (sensorId == 2) { //CURRENT_VOLTAGE
+        *type = SensorType::CURRENT_VOLTAGE;
+        return readVoltageCurrent();
+    } else {
+        *type = SensorType::UNKNOWN_SENSOR;
+        return "sensor_not_found";
+    }
+}
+
+void MainSystem::control(const uint8_t &controlId, const String &stringValue) {
+    //TODO: DYNAMICALLY SET CONTROLS! FOR TIME, ONLY FAN!
+    if (controlId == 1) {
+        FanControlInstance.setFanSpeed(stringValue.toInt());
+    } else if (controlId == 2) {
+        PxMatrixControlInstance.setBrightness(stringValue.toInt());
+    }
+
+}
 
 void LoadedData::printContents() {
     Serial.println("---LOADED DATA---");

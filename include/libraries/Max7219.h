@@ -5,7 +5,7 @@
 #ifndef VISORV3_MAX7219_H
 #define VISORV3_MAX7219_H
 
-
+#include <random>
 
 #define MAX7219_TEST 0x0f // in real code put into a .h file
 #define MAX7219_BRIGHTNESS 0x0a // in real code put into a .h file
@@ -81,7 +81,7 @@ private:
     void init(uint8_t numberOfMatrices, uint8_t width, uint8_t height, SPIClass spi, uint8_t mosi, uint8_t clk, uint8_t ss, connType connectionType)
     {
         _matricesNumber = numberOfMatrices;
-        _buffer = new uint8_t[numberOfMatrices*8];
+        _buffer = new uint8_t[numberOfMatrices * 8];
         _spiClass = spi;
         _spiMosi = mosi;
         _spiClk = clk;
@@ -89,18 +89,23 @@ private:
         _connectionType = connectionType;
         _height = height;
         _width = width;
-        WIDTH = _width*8;
-        HEIGHT = _height*8;
+        WIDTH = _width * 8;
+        HEIGHT = _height * 8;
+
+#ifdef MAIN_MAX_MATRIX
+        prefillOffsetsDirect();
+#else
         prefillOffsets2x2();
+#endif
+
         _initialized = true;
         return;
-        switch(connectionType)
-        {
+        switch (connectionType) {
             case DIRECT:
                 //TODO
                 break;
             case BULK2x2:
-                WIDTH = (numberOfMatrices/(height))*8;
+                WIDTH = (numberOfMatrices / (height)) * 8;
                 HEIGHT = height*8;
                 //precalculateBulk2x2Offsets();
                 break;
@@ -118,14 +123,26 @@ private:
 
     void sendStartupCommands();
 
-    void prefillOffsets2x2()
-    {
-        for(int i = 0 ; i < 2; i ++)
-        {
-            for(int y = 0; y < 16; y++)
-            {
-                for(int x = 0; x < 16; x++)
-                {
+    void prefillOffsetsDirect() {
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 32; x++) {
+
+                offsets[x][y] = x + (y / 8) * 32;
+                if (y > 7 && y < 23) {
+                    offsets[x][y] -= 16;
+                } else if (y > 24) {
+                    offsets[x][y] -= 32;
+                }
+            }
+        }
+    }
+
+
+    void prefillOffsets2x2() {
+        //TODO: Change numbers to being calculated
+        for (int i = 0; i < 2; i++) {
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
                     offsets[x][i*16 + y] = i*32 + (y/8)*8 + x + (x/8)*(8);
                 }
             }
@@ -160,6 +177,7 @@ void Max7219::begin() {
     _spiClass.setBitOrder(MSBFIRST);
     _spiClass.setDataMode(SPI_MODE0);
     sendStartupCommands();
+    _initialized = true;
 }
 
 Max7219::Max7219(uint8_t width, uint8_t height, uint8_t numberOfMatrices, connType connType): Adafruit_GFX(0,0) {
@@ -200,37 +218,39 @@ void Max7219::drawPixel(int16_t x, int16_t y, uint16_t color) {
 }
 
 void Max7219::display() {
-
-    if(millis()-lastStartupCommandsSend >= MAX_STARTUP_REFRESH)
-    {
-        Serial.println("REFRESH");
-        pinMode(_spiClk, OUTPUT);
-        pinMode(_spiSS, OUTPUT);
-        pinMode(_spiMosi, OUTPUT);
-        sendStartupCommands();
-        delayMicroseconds(100);
-    }
-    for(int i = 1; i < 9; i++){
+    pinMode(_spiClk, OUTPUT);
+    pinMode(_spiSS, OUTPUT);
+    pinMode(_spiMosi, OUTPUT);
+//    if(millis()-lastStartupCommandsSend >= MAX_STARTUP_REFRESH)
+//    {
+//        Serial.println("REFRESH");
+//        pinMode(_spiClk, OUTPUT);
+//        pinMode(_spiSS, OUTPUT);
+//        pinMode(_spiMosi, OUTPUT);
+//        sendStartupCommands();
+//        delayMicroseconds(100);
+//    }
+    for (int i = 1; i < 9; i++) {
         digitalWrite(_spiSS, LOW);
         //for(int dev = 0; dev < _width*_height; dev++){
-        for(int dev = _width*_height-1; dev >= 0; dev--){
+        for (int dev = _matricesNumber - 1; dev >= 0; dev--) {
             _spiClass.transfer(i);
-            _spiClass.transfer(_buffer[i-1+dev*8]);
+            _spiClass.transfer(_buffer[i - 1 + dev * 8]);
         }
         digitalWrite(_spiSS, HIGH);
     }
 }
 
 void Max7219::drawTestPattern() {
-    if(_initialized)
-    {
+    if (_initialized) {
         begin();
     }
     clearDisplay();
     //println("ABC");
-    for(int i = 0; i < 64; i++)
-    {
-        _buffer[i] = testData[i];
+
+    Serial.println("CO JEST");
+    for (int i = 0; i < 96; i++) {
+        _buffer[i] = millis() % 255;
     }
     display();
     //fillRect(2,2, 10, 10, MAX_ON_PIXEL);

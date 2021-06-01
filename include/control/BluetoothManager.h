@@ -35,9 +35,6 @@
 #include "map"
 #include "control/ControlFunctions.h"
 
-std::map<uint8_t, void(*)(uint8_t*)> allFunctionsMapping = {
-        {1, &processIncomingCode1}
-};
 class BluetoothManager {
 
 
@@ -71,17 +68,6 @@ class BluetoothManager {
         return pin == BLUETOOTH_CONNECTION_PIN;
     }
 
-    static void processData(uint8_t idByte, uint8_t* data){
-        if(allFunctionsMapping.find(idByte) != allFunctionsMapping.end())
-        {
-            auto f = allFunctionsMapping[idByte];
-            if(f != nullptr){
-                f(data);
-            }
-        }
-
-    }
-
     class BluetoothCallback : public BLECharacteristicCallbacks {
     public:
         explicit BluetoothCallback(BluetoothManager* instance)
@@ -103,7 +89,7 @@ class BluetoothManager {
                 Serial.println("PIN CORRECT!");
                 //Serial.println(show_binary(data[2], 8).c_str());
                 //Serial.println(show_binary(data[3], 8).c_str());
-                processData(data[2], data);
+                //processData(data[2], data);
             }
             else{
                 Serial.println("INCORRECT PIN!");

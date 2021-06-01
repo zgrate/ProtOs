@@ -17,16 +17,20 @@
 #include "QCFanControl.h"
 #include "OLEDControl.h"
 #include "SDCardControl.h"
+#include "control/WifiManager.h"
+#include "control/Packets.h"
+#include "INA219.h"
 
+void executeTests() {
 
-void executeTests()
-{
     Serial.println("STARTING TESTS....");
-    //ThermometerControlInstance.test();
+    ThermometerControlInstance.test();
     //WsControlInstance.test();
-  //  Max7219ControlInstance.test();
-    //PxMatrixControlInstance.test();
-   // FanControlInstance.test();
+    //Max7219ControlInstance.test();
+    PxMatrixControlInstance.test();
+//CurrentMeterInstance.begin();
+    FanControlInstance.test();
+//WifiManagerInstance.connect();
     testSD();
 #ifdef OLED_SUPPORT //TODO TEST MUST ME MADE USING I2C SCANNER
     OledControlInstance.test();

@@ -48,9 +48,10 @@ BSD license, check license.txt for more information
 #include <util/delay.h>
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "ConstantsAndSettings.h"
 #include "SD_MMC.h"
+#include "control/Definitions.h"
 
 // Sometimes some extra width needs to be passed to Adafruit GFX constructor
 // to render text close to the end of the display correctly
@@ -296,6 +297,8 @@ public:
     // 3 * _pattern_color_bytes
     uint16_t _send_buffer_size;
 
+    AnimationMode animationMode = AnimationMode::ANIMATION_FROM_FILE;
+
     // This is for double buffering
     bool _active_buffer;
 
@@ -354,6 +357,14 @@ public:
     void fullBrightness();
 
     uint8_t *getBufferAddress();
+
+    AnimationMode getAnimationMode();
+
+    void setAnimationMode(AnimationMode mode) {
+        this->animationMode = mode;
+    }
+
+    void drawPixels(const vector<Pixel> &vector);
 };
 
 class CyclicRGBBuffer {
@@ -1013,7 +1024,7 @@ void PxMATRIX::latch(uint16_t show_time) {
 }
 
 void PxMATRIX::display() {
-    display(PxMATRIX_SHOWTIME);
+    display(_draw_time);
 }
 
 void PxMATRIX::set_mux(uint8_t value) {
@@ -1249,12 +1260,13 @@ void writeToRegisterPin(uint8_t pin, uint8_t state) {
 
 //hw_timer_t * timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-void display_updater() {
+
+void IRAM_ATTR display_updater() {
     // Increment the counter and set the time of ISR
-   // portENTER_CRITICAL_ISR(&timerMux);
+    portENTER_CRITICAL_ISR(&timerMux);
     PxMatrixControlInstance.display(PxMatrixControlInstance.getDrawTime());
     //   display.displayTestPattern(70);
-    //portEXIT_CRITICAL_ISR(&timerMux);
+    portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 //void IRAM_ATTR old_display_updater(void * display){
@@ -1264,6 +1276,15 @@ void display_updater() {
 //
 //    }
 //}
+
+void threadDisplay(void *pvParameters) {
+    for (;;) {
+        PxMatrixControlInstance.display(PxMatrixControlInstance.getDrawTime());
+        yield();
+    }
+}
+
+TaskHandle_t handle;
 
 void PxMATRIX::startDisplayThread() {
     if (!_initialized)
@@ -1276,7 +1297,7 @@ void PxMATRIX::startDisplayThread() {
 
 
 //    xTaskCreatePinnedToCore(
-//            old_display_updater, /* Function to implement the task */
+//            threadDisplay, /* Function to implement the task */
 //            "Screen Task", /* Name of the task */
 //            10000,  /* Stack size in words */
 //            NULL,  /* Task input parameter */
@@ -1305,7 +1326,7 @@ void PxMATRIX::test() {
 
     if (!_initialized) {
         begin();
-        startDisplayThread();
+        //startDisplayThread();
     }
     #ifdef PxMATRIX_FULLBRIGHTNESS
         setBrightness(255);
@@ -1354,10 +1375,19 @@ uint8_t *PxMATRIX::getBufferAddress() {
     return PxMATRIX_buffer[0];
 }
 
+AnimationMode PxMATRIX::getAnimationMode() {
+    return LIVE_ANIMATION;
+}
+
+void PxMATRIX::drawPixels(const vector <Pixel> &vector) {
+    for (auto p : vector) {
+        this->drawPixel(p.x, p.y, color565(p.r, p.b, p.g)); //TODO : IT SHOULD NOT BE LIKE THIS
+    }
+}
+
 
 void testFileStreaming() {
-    for(int i = 0; i < 1536; i++)
-    {
+    for (int i = 0; i < 1536; i++) {
         PxMatrixControlInstance.PxMATRIX_buffer[0][i] = testBuffor[i];
     }
 }

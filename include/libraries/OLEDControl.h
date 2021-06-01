@@ -44,6 +44,14 @@ public:
 
     }
 
+    void reset() {
+        oled.clear();
+    }
+
+    void println(const string &line) {
+        oled.println(line.c_str());
+    }
+
 
 };
 

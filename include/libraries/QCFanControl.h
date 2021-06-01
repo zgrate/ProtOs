@@ -209,6 +209,7 @@ public:
     }
 
     void setFanSpeed(uint8_t percentage){
+        Serial.println("Setting fan speed to " + String(percentage));
         if(percentage > 0 && percentage <= 100) {
             currentFanSpeedPercentage = percentage;
             qc3ClientClass.setMillivolts(QC_MIN_VOLTAGE + percentage * millisIncrement);

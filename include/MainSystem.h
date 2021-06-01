@@ -7,6 +7,9 @@
 
 #include "Arduino.h"
 #include "SD_MMC.h"
+#include "control/Packets.h"
+#include "control/Definitions.h"
+#include "INA219.h"
 
 #define DATA_VERSION 1
 #define MAX_DATA 100
@@ -16,7 +19,7 @@
 #define INVALID 0
 
 
-class LoadedData{
+class LoadedData {
 private:
     String fileName;
     uint32_t packetLength;
@@ -157,7 +160,6 @@ class MainSystem{
 
 private:
     void initializeAllHardware();
-    void mainDisplayLoop();
 
     LoadedData* data = nullptr;
     unsigned long currentFramePx = 0, currentFrameMax = 0, currentFrameWs = 0;
@@ -165,20 +167,29 @@ private:
     int frameTime = 0;
 
 
-
 public:
     void setup();
+
     void loop();
 
+    void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
 
     void loadNewFile(String filename);
+
+    void mainDisplayLoop();
+
+    void liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector);
+
+    void clearDisplay(const uint8_t &screenId);
+
+    String readSensor(const uint8_t &sensorId, uint8_t *type);
+
+    void control(const uint8_t &controlId, const String &stringValue);
 };
 
 
-
-
-
 extern MainSystem MAIN;
+extern INA219 CurrentControlCenter;
 
 
 #endif //VISORV3_MAINSYSTEM_H

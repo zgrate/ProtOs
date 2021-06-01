@@ -5,6 +5,12 @@
 #ifndef VISORV3_CONSTANTSANDSETTINGS_H
 #define VISORV3_CONSTANTSANDSETTINGS_H
 
+#include <Arduino.h>
+#include <cstring>
+//#define MAIN_PX_MATRIX
+#define MAIN_MAX_MATRIX
+
+
 //MODULES CONFIGURATION
 #define THERMOMETER_SUPPORT
 #define FAN_SUPPORT
@@ -15,53 +21,19 @@
 #define TEST_MODE
 
 
-//PINS CONFIGURATION
-#define PIN_INPUT_DIPSWITCH_1 35
-#define PIN_INPUT_DIPSWITCH_2 34
-#define PIN_INPUT_DIPSWITCH_3 39
-#define PIN_INPUT_DIPSWITCH_4 36
-#define PIN_INPUT_BUTTON 24
 
-#define PIN_OUTPUT_WS 32
-#define PIN_OUTPUT_USB_DPLUS 25
-#define PIN_OUTPUT_USB_DMINUS 26
-#define PIN_DAC_USB_DPLUS DAC1
-#define PIN_DAC_USB_DMINUS DAC2
+//Import pin definitions
+#ifdef MAIN_PX_MATRIX
+#include "pindefinitions/PXMatrixPinDefinitions.h"
+#endif
 
-#define PIN_OUTPUT_MAX_MOSI 27
-#define PIN_OUTPUT_MAX_CLK 12
-#define PIN_OUTPUT_MAX_CS 13
+#ifdef MAIN_MAX_MATRIX
 
-#define PIN_SD_CLK 14
-#define PIN_SD_D0 2
-#define PIN_SD_CMD 15
+#include "pindefinitions/MAXPinDefinitions.h"
 
-#define PIN_OUTPUT_PX_MOSI 23
-#define PIN_OUTPUT_PX_CLK 18
-#define PIN_OUTPUT_PX_STROBO 5
-#define PIN_OUTPUT_PX_REGLATCH PIN_OUTPUT_PX_STROBO
-#define PIN_OUTPUT_PX_OE 19
+#endif
 
-#define PIN_EMPTY_1 17
-#define PIN_EMPTY_2 16
-#define PIN_EMPTY_3 4
-
-#define PIN_SDA 21
-#define PIN_SCL 22
-//Set to 255 if no reset pin
-#define PIN_OLED_RESET 255
-
-#define PIN_DHT22TEMP 33
-
-#define I2C_OLED_ADDRESS 0x0
-#define I2C_CURRENTMETER_ADDRESS 0x0
-
-#define PIN_REG_FIRST 0
-#define PIN_BUZZER PIN_REG_FIRST
-#define PIN_REG_SECOND 1
-#define PIN_REG_THIRD 2
-#define PIN_REG_FOURTH 3
-
+#define CONFIGURATION_FILE "/config.json"
 
 //SETTINGS
 //PxMatrix section
@@ -96,7 +68,7 @@
 #define PxMATRIX_ROW_PATTERN 16
 
 //Default brightness of Matrix (0-255)
-#define PxMATRIX_DEFAULT_BRIGHTNESS 20
+#define PxMATRIX_DEFAULT_BRIGHTNESS 255
 
 //Mux delay of PX Matrix
 #define PxMATRIX_MUX_DELAY 10
@@ -109,11 +81,11 @@
 #define MAX_SPI_FREQ 2000000
 
 //Number of matrics
-#define MAX_MATRICES_NUMBER 8
+#define MAX_MATRICES_NUMBER 12
 //Height of matrix (in number of matrices)
 #define MAX_HEIGHT 4
 //Local width of matrices (in number of matrics)
-#define MAX_WIDTH 2
+#define MAX_WIDTH 4
 
 //SPI CLASS used for SPI
 #define MAX_SPI_CLASS VSPI
@@ -133,7 +105,7 @@
 #define MAX_STARTUP_REFRESH 10000
 
 //Performs test of all leds, turning them on at max power
-//#define MAX_FULLPOWER_TEST
+//]#define MAX_FULLPOWER_TEST
 
 //WS CONTROL
 //Number of leds in a row
@@ -165,6 +137,14 @@
 //Define if you want global instance of Thermometer control
 #define THERMOMETER_GLOBAL_INSTANCE
 
+//Current meter control
+
+//Shut type (ohm)
+#define SHUNT_OHM 0.01
+
+//Max shunt voltage
+#define SHUNT_VOLTAGE 32
+
 //OLED control
 //Define if you want global instance of Oled Control
 #define OLED_GLOBAL_INSTANCE
@@ -186,8 +166,21 @@ const int BLUETOOTH_CONNECTION_PIN = 11991;
 //Define if you want global Bluetooth instance
 #define BLUETOOTH_GLOBAL_INSTANCE
 
+//WIFI
+//Default SSID of WIFI network
+extern String WIFI_SSID;
+
+//Default Password of WIFI network
+extern String WIFI_PASSWORD;
+
+//Wifi hostname - It will always start with 'VISS_'
+extern String WIFI_HOSTNAME;
+//WIFI PORT
+extern int WIFI_PORT;
+
 //Define if you want debug output to be redirected to Serial
 //#define SERIAL_DEBUG
+
 
 
 //Define in you want to disable debug output
@@ -195,7 +188,6 @@ const int BLUETOOTH_CONNECTION_PIN = 11991;
 
 //Useful, global methods
 
-#include <Arduino.h>
 void writeToRegisterPin(uint8_t pin, uint8_t state);
 
 void debugPrint(const String& text);
