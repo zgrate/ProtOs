@@ -33,7 +33,7 @@ void mainTask(void *pvParameters) {
     Serial.println(xPortGetCoreID());
     initCurrentMeter();
     WifiManagerInstance.connect();
-    for (;;) {
+    while (true) {
         //MAIN.mainDisplayLoop();
         WifiManagerInstance.loop();
         vTaskDelay(100);
@@ -214,7 +214,7 @@ String MainSystem::readSensor(const uint8_t &sensorId, uint8_t *type) {
     //TODO: Map sensors dynamically
     if (sensorId == 1) { //TEMPERATURE_HUMIDITY
         *type = SensorType::TEMPERATURE_HUMIDITY;
-        return ThermometerControlInstance.getTemperatureAndHumidity();
+        return ThermometerControlInstance.requestData("");
     } else if (sensorId == 2) { //CURRENT_VOLTAGE
         *type = SensorType::CURRENT_VOLTAGE;
         return readVoltageCurrent();

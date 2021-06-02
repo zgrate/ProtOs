@@ -9,9 +9,28 @@ String WIFI_PASSWORD = "OculusQuest2";
 String WIFI_HOSTNAME = "ZVIS";
 int WIFI_PORT = 48999;
 
+#ifdef SERIAL_DEBUG
+
 void debugPrint(const String &text) {
+
     Serial.println(text);
 }
+
+void debugPrint(const int &text)
+{
+    Serial.println(text);
+}
+#else
+
+void debugPrint(const String &text) {
+
+}
+
+void debugPrint(const int &text) {
+}
+
+#endif
+
 
 DynamicJsonDocument getDocumentToSave() {
     DynamicJsonDocument doc(JSON_DOC_CAPA);

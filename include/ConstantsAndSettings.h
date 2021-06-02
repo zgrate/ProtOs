@@ -7,8 +7,9 @@
 
 #include <Arduino.h>
 #include <cstring>
-//#define MAIN_PX_MATRIX
-#define MAIN_MAX_MATRIX
+
+#define MAIN_PX_MATRIX
+//#define MAIN_MAX_MATRIX
 
 
 //MODULES CONFIGURATION
@@ -24,7 +25,8 @@
 
 //Import pin definitions
 #ifdef MAIN_PX_MATRIX
-#include "pindefinitions/PXMatrixPinDefinitions.h"
+
+#include "configurationspresets/ZMatrixConfiguration.h"
 #endif
 
 #ifdef MAIN_MAX_MATRIX
@@ -68,7 +70,7 @@
 #define PxMATRIX_ROW_PATTERN 16
 
 //Default brightness of Matrix (0-255)
-#define PxMATRIX_DEFAULT_BRIGHTNESS 255
+#define PxMATRIX_DEFAULT_BRIGHTNESS 128
 
 //Mux delay of PX Matrix
 #define PxMATRIX_MUX_DELAY 10
@@ -188,21 +190,13 @@ extern int WIFI_PORT;
 
 //Useful, global methods
 
+void constructCapabilitiesList();
+
 void writeToRegisterPin(uint8_t pin, uint8_t state);
 
-void debugPrint(const String& text);
+void debugPrint(const String &text);
 
-#ifdef SERIAL_DEBUG
-
-void debugPrint(const String& text){
-    Serial.println(text);
-}
-#elif DISABLE_DEBUG
-void debugPrint(String text)
-{
-
-}
-#endif
+void debugPrint(const int &text);
 
 
 #endif //VISORV3_CONSTANTSANDSETTINGS_H

@@ -6,7 +6,7 @@
 
 
 uint8_t crc8(const uint8_t *addr, uint16_t len) {
-    Serial.println("CRC8_Read");
+    debugPrint("CRC8_Read");
     uint8_t crc = 0;
     for (uint16_t i = 0; i < len; i++) {
         uint8_t inbyte = addr[i];
@@ -18,8 +18,7 @@ uint8_t crc8(const uint8_t *addr, uint16_t len) {
             inbyte >>= 1;
         }
     }
-    Serial.println("GotCRC8");
-
+    debugPrint("GotCRC8");
     return crc;
 }
 
@@ -31,10 +30,8 @@ uint16_t readShort(Stream &s) {
 
 uint8_t bufferArray[65500];
 
-# pragma message "WE ARE IMPORTING THIS"
-
 std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pipeline) {
-    Serial.println("Got a package! Reading it....");
+    debugPrint("Got a package! Reading it....");
     uint8_t id = s.read();
     uint16_t length = readShort(s);
     //uint8_t bufferArray[length];
@@ -51,11 +48,9 @@ std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pip
         }
         //TODO
     }
-    Serial.println("Read the packet fully!");
+    debugPrint("Read the packet fully!");
     uint8_t crc8Received;
-    Serial.print(readBytes);
-    Serial.print(" len ");
-    Serial.println(length);
+    debugPrint(String(readBytes) + " len " + String(length));
     if (readBytes > length) {
 
         crc8Received = bufferArray[readBytes - 1];
@@ -63,13 +58,10 @@ std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pip
         crc8Received = s.read();
     }
 
-    Serial.println(crc8Received);
+    debugPrint(crc8Received);
     uint8_t fin = crc8(bufferArray, length);
     if (crc8Received != fin) {
-        Serial.print("CRC8 ERROR: GOT: ");
-        Serial.print(crc8Received);
-        Serial.print(" Calculated: ");
-        Serial.println(fin);
+        debugPrint("CRC8 ERROR: GOT: " + String(crc8Received) + " Calculated " + String(fin));
         return nullptr;
     }
 
@@ -99,14 +91,10 @@ std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pip
             break;
         default:
             //ERROR! Packet not found!
-            Serial.print("Packet id unknown! ID: ");
-            Serial.println(id);
+            debugPrint("Packet id unknown! ID: " + String(id));
             return nullptr;
     }
-    Serial.print("Got a packet ");
-    Serial.print(id);
-    Serial.print(" with len ");
-    Serial.println(length);
+    debugPrint("Got a packet " + String(id) + " with len " + String(length));
     Packet->readPacket(bufferArray, length);
     return Packet;
 
@@ -135,8 +123,7 @@ String readString(Stream &s) {
 }
 
 void writeShort(const uint16_t &number, uint8_t *bytes, const uint16_t &from) {
-    Serial.print("Writing number to buffer ");
-    Serial.println(number);
+    debugPrint("Writing number to buffer " + String(number));
     bytes[from + 0] = (uint8_t) number;
     bytes[from + 1] = (uint8_t) (number >> 8);
 }
@@ -172,8 +159,7 @@ uint16_t readShort(const uint8_t *array, int from) {
 
 String readString(const uint8_t *array, int from, int *length) {
     *length = readShort(array, from);
-    Serial.print("reading string of length ");
-    Serial.println(*length);
+    debugPrint("reading string of length " + String(*length));
     char c[*length];
     for (int i = 0; i < *length; i++) {
         c[i] = array[from + 2 + i];

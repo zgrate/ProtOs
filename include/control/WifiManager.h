@@ -15,9 +15,7 @@
 class WifiManager {
 
     WiFiServer server = WiFiServer(WIFI_PORT);
-
     WiFiClient client;
-
 
 public:
     void connect() {
@@ -46,17 +44,12 @@ public:
         if (!client.connected()) {
             return false;
         }
-        Serial.println("preparing the packet....");
-
+        debugPrint("preparing the packet....");
         uint16_t length = 0;
         uint8_t *buffor = packetToSend->getPacket(&length);
-        Serial.print("Length of the packet is ");
-        Serial.println(length);
-        Serial.print("Address of buffor ");
-        Serial.println(buffor == nullptr);
+        debugPrint("Length of the packet is " + String(length));
         uint8_t crc = crc8(buffor, length);
-        Serial.print("CRC is ");
-        Serial.println(crc);
+        debugPrint("CRC is " + String(crc));
         delay(1);
         client.write(packetToSend->getPacketId());
         client.write(length);
@@ -64,7 +57,7 @@ public:
         client.write(buffor, length);
         client.write(crc);
         client.flush();
-        Serial.println("SEND PACKET!");
+        debugPrint("SEND PACKET!");
         delay(1000);
 
         delete[] buffor;
@@ -74,17 +67,17 @@ public:
     void loop() {
         client = server.available();   // listen for incoming clients
         if (client) {                             // if you get a client,
-            Serial.println("New Client.");           // print a message out the serial port
+            debugPrint("New Client.");           // print a message out the serial port
             String currentLine = "";                // make a String to hold incoming data from the client
             while (client.connected()) {            // loop while the client's connected
                 if (client.available()) {             // if there's bytes to read from the client,
-                    //Serial.println("UWU");
+                    //debugPrint("UWU");
                     auto p = constructPacket(client, PacketPipeline::WIFI);
                     if (p != nullptr) {
                         //Serial.print("Received packet ");
                         Serial.print(p->getPacketId());
-                        //Serial.println("");
-                        //Serial.println("End of packet!");
+                        //debugPrint("");
+                        //debugPrint("End of packet!");
                         processIncomingPacket(p);
                     }
 
@@ -92,7 +85,7 @@ public:
 //
 //                    String string1 = client.readString();
 //
-//                    Serial.println(string1);
+//                    debugPrint(string1);
 //                    PxMatrixControlInstance.setBrightness(string1.toInt());
 
 
@@ -138,7 +131,7 @@ public:
             }
             // close the connection:
             client.stop();
-            Serial.println("Client Disconnected.");
+            debugPrint("Client Disconnected.");
         }
     }
 };
