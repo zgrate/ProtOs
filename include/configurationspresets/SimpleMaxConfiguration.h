@@ -2,28 +2,21 @@
 // Created by dzing on 26/02/2021.
 //
 
-#ifndef VISORV3_PXMATRIXPINDEFINITIONS_H
-#define VISORV3_PXMATRIXPINDEFINITIONS_H
-
-
-//MODULES CONFIGURATION
-
-//Capabilities:
-//Here, you can define, what is supported. Defined number is an ID of a device. It should be max 255 per control, sensor and screen
+#ifndef VISORV3_MAXPINDEFINITIONS_H
+#define VISORV3_MAXPINDEFINITIONS_H
 
 //CONTROLS
-#define FAN_QC_SUPPORT 1
-#define OLED_SUPPORT 2
-#define PX_BRIGHTNESS_CONTROL 3
+//#define FAN_QC_SUPPORT 1
+//#define OLED_SUPPORT 2
+//#define PX_BRIGHTNESS_CONTROL 3
 #define MAX_BRIGTHNESS_CONTROL 4
-//#define WS_MATRIX_SUPPORT
 
 //SENSORS
-#define THERMOMETER_HYDROMETER_SENSOR 1
-#define CURRENT_VOLTAGE_SENSOR 2
+//#define THERMOMETER_HYDROMETER_SUPPORT 1
+//#define CURRENT_VOLTAGE_SENSOR 2
 //SCREENS
-#define PX_MATRIX_SCREEN 1
-#define MAX_MATRIX_SCREEN 2
+//#define PX_MATRIX_SUPPORT 1
+#define MAX_MATRIX_SUPPORT 2
 
 //HARDWARE
 //SD SUPPORT
@@ -33,8 +26,7 @@
 //BLUETOOTH CONNECTION
 #define BLUETOOTH_SUPPORT
 //TIME
-#define TIME_SUPPORT
-
+//#define TIME_SUPPORT
 
 //PINS CONFIGURATION
 #define PIN_INPUT_DIPSWITCH_1 35
@@ -49,83 +41,46 @@
 #define PIN_DAC_USB_DPLUS DAC1
 #define PIN_DAC_USB_DMINUS DAC2
 
-#define PIN_OUTPUT_MAX_MOSI 27
-#define PIN_OUTPUT_MAX_CLK 12
-#define PIN_OUTPUT_MAX_CS 13
+#define PIN_OUTPUT_MAX_MOSI 23
+#define PIN_OUTPUT_MAX_CLK 18
+#define PIN_OUTPUT_MAX_CS 5
+#define PIN_OUTPUT_MAX_ALTERNATIVE 17
 
 #define PIN_SD_CLK 14
 #define PIN_SD_D0 2
 #define PIN_SD_CMD 15
 
-#define PIN_OUTPUT_PX_MOSI 23
-#define PIN_OUTPUT_PX_CLK 18
-#define PIN_OUTPUT_PX_STROBO 5
-#define PIN_OUTPUT_PX_REGLATCH PIN_OUTPUT_PX_STROBO
-#define PIN_OUTPUT_PX_OE 19
+//#define PIN_OUTPUT_PX_MOSI 23
+//#define PIN_OUTPUT_PX_CLK 18
+//#define PIN_OUTPUT_PX_STROBO 5
+//#define PIN_OUTPUT_PX_REGLATCH PIN_OUTPUT_PX_STROBO
+//#define PIN_OUTPUT_PX_OE 19
 
-#define PIN_EMPTY_1 17
+//#define PIN_EMPTY_1 17
 #define PIN_EMPTY_2 16
 #define PIN_EMPTY_3 4
+#define PIN_EMPTY_4 23
+#define PIN_EMPTY_5_5V 4
 
 #define PIN_SDA 21
 #define PIN_SCL 22
 //Set to 255 if no reset pin
-#define PIN_OLED_RESET 255
+#define PINOLED_RESET 255
 
-#define PIN_DHT22TEMP 33
+//#define PIN_DHT22TEMP 33
+
+
+//External board header - can be used by other devices
+#define PIN_8_IR_REC 33
+#define PIN_7_IR_TRANS 27
+#define PIN_6_EXTERNAL 13
+#define PIN_5_EXTERNAL 12
 
 //#define I2C_OLED_ADDRESS 0x0
 //#define I2C_CURRENTMETER_ADDRESS 0x0
 
-#define PIN_REG_FIRST 0
-#define PIN_BUZZER PIN_REG_FIRST
-#define PIN_REG_SECOND 1
-#define PIN_REG_THIRD 2
-#define PIN_REG_FOURTH 3
-
 //SETTINGS
-//PxMatrix section
-#ifdef PX_MATRIX_SCREEN
-
-// Defines how long we display things by default
-#define PxMATRIX_SHOWTIME 40
-
-// Defines the speed of the spiClass bus (reducing this may help if you experience noisy images)
-#define PxMATRIX_SPI_FREQUENCY 15000000
-
-#define PxMATRIX_INTERRUPT_TIMER 5000
-//Defines max amount of buffered frames
-#define PxMATRIX_MAX_FRAMES_BUFFER 40
-
-//Defines SPIClass for PxMatrices
-#define PxMATRIX_SPICLASS HSPI
-
-// Defines the buffer height / the height of the matrix
-#define PxMATRIX_HEIGHT 32
-
-// Defines the buffer width / the maximum width of the matrix
-#define PxMATRIX_WIDTH 128
-//Number of matrices in the row
-#define PxMatrix_WIDTH_NUMBER 2
-
-// This is how many color levels the display shows - the more the slower the update
-#define PxMATRIX_COLOR_DEPTH 1 //TODO: HERE MAY COLORS BE INCORRECTLY DISPLAYED
-
-//Row pattern of matrix
-#define PxMATRIX_ROW_PATTERN 16
-
-//Default brightness of Matrix (0-255)
-#define PxMATRIX_DEFAULT_BRIGHTNESS 128
-
-//Mux delay of PX Matrix
-#define PxMATRIX_MUX_DELAY 10
-
-//FULLBRIGHTNESS TEST
-//#define PxMATRIX_FULLBRIGHTNESS
-
-#endif
-
-#ifdef MAX_MATRIX_SCREEN
+#ifdef MAX_MATRIX_SUPPORT
 //MAX7219 Settings
 //Frequency of SPI used for MAX7219
 #define MAX_SPI_FREQ 2000000
@@ -149,6 +104,9 @@
 //Default MAX brightness
 #define MAX_DEFAULT_BRIGHTNESS 3
 
+//Global MAX7219 Instance
+#define MAX_GLOBAL_INSTANCE
+
 //Unfortunately, MAX matrices need to be initialized.
 // If you experience blocks of MAXes (for example screen getting fullbrigthness), you can define,
 // how often the system will send startup commands to maxes (in milliseconds)
@@ -171,13 +129,21 @@
 //Default brightness of WS
 #define WS_DEFAULT_BRIGHTNESS 10
 
+//If create global instance
+#define WS_GLOBAL_INSTANCE
+
 //If defined, performs test by turning all WS leds at max power
 //#define WS_FULLPOWER_TEST
 
 #endif
 
 #ifdef FAN_QC_SUPPORT
+//Global instance for FanControl
+#define FAN_GLOBAL_INSTANCE
 
+//QuickCharge fan control control setup
+//Define if you want global instance of qc fan control
+#define QC_GLOBAL_INSTANCE
 
 //Minimum and maximum QC voltage
 #define QC_MIN_VOLTAGE 5000
@@ -185,29 +151,11 @@
 
 #endif
 
-#ifdef THERMOMETER_HYDROMETER_SENSOR
+#ifdef THERMOMETER_HYDROMETER_SUPPORT
 //Thermometer control
+//Define if you want global instance of Thermometer control
+#define THERMOMETER_GLOBAL_INSTANCE
 
-#endif
-
-
-#ifdef CURRENT_VOLTAGE_SENSOR
-//Current meter control
-//Shut type (ohm)
-#define CURRENT_VOLTAGE_SHUNT_OHM 0.01
-
-//Max shunt voltage
-#define CURRONT_VOLTAGE_SHUNT_VOLTAGE 32
-
-#endif
-
-#ifdef OLED_SUPPORT
-//OLED control
-
-//Number of lines
-#define OLED_LINES 4
-//Max line length
-#define OLED_MAX_LENGTH 16
 
 #endif
 
@@ -234,13 +182,13 @@ const int BLUETOOTH_CONNECTION_PIN = 11991;
 #ifdef WIFI_SUPPORT
 //WIFI
 //Default SSID of WIFI network
-extern String wifiSsid;
+extern String WIFI_SSID;
 
 //Default Password of WIFI network
-extern String wifiPassword;
+extern String WIFI_PASSWORD;
 
 //Wifi hostname - It will always start with 'VISS_'
-extern String wifiHostname;
+extern String WIFI_HOSTNAME;
 //WIFI PORT
 extern int WIFI_PORT;
 
@@ -249,4 +197,4 @@ extern int WIFI_PORT;
 //#define SERIAL_DEBUG
 
 
-#endif //VISORV3_PXMATRIXPINDEFINITIONS_H
+#endif //VISORV3_MAXPINDEFINITIONS_H

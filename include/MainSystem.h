@@ -31,23 +31,22 @@ private:
 
     unsigned long maxFrames;
     uint8_t maxSizeX, maxSizeY;
-    uint8_t* maxData;
+    uint8_t *maxData;
     int maxFrameSize{};
 
     unsigned long wsFrames;
     uint8_t wsSizeX, wsSizeY;
-    uint8_t* wsData;
+    uint8_t *wsData;
     int wsFrameSize = 0;
 
     uint8_t pxMode;
     unsigned long pxFrames;
     uint8_t pxSizeX, pxSizeY;
-    uint8_t* pxData;
+    uint8_t *pxData;
     String pxFileName;
     File pxFile;
     uint8_t pxFileStart = 0;
     int pxFrameSize = 0;
-
 
 
 public:
@@ -63,25 +62,22 @@ public:
         return pxFrameSize;
     }
 
-    ~LoadedData(){
-        if(maxData != nullptr)
-        {
+    ~LoadedData() {
+        if (maxData != nullptr) {
             free(maxData);
         }
-        if(wsData != nullptr)
-        {
+        if (wsData != nullptr) {
             free(wsData);
         }
-        if(pxData != nullptr)
-        {
+        if (pxData != nullptr) {
             free(pxData);
         }
-        if(pxFile)
-        {
+        if (pxFile) {
             pxFile.close();
         }
     }
-    LoadedData(){
+
+    LoadedData() {
         packetLength = 0;
         fileName = "";
         animationName = "";
@@ -121,33 +117,33 @@ public:
         return fps;
     }
 
-    int getPXMatrixMode() const{
+    int getPXMatrixMode() const {
         return pxMode;
     }
 
 
-    uint8_t * getPXFrameStartAddress(unsigned long currentFramePx) {
-        return pxData+currentFramePx*pxFrameSize;
+    uint8_t *getPXFrameStartAddress(unsigned long currentFramePx) {
+        return pxData + currentFramePx * pxFrameSize;
     }
 
     unsigned long getPxFrames() const {
         return pxFrames;
     }
 
-    unsigned long getMaxFrames() const{
+    unsigned long getMaxFrames() const {
         return maxFrames;
     }
 
-    uint8_t * getMaxFrameStartAddress(unsigned long frame) {
-        return maxData + frame*maxFrameSize;
+    uint8_t *getMaxFrameStartAddress(unsigned long frame) {
+        return maxData + frame * maxFrameSize;
     }
 
-    unsigned long getWsFrames() const{
+    unsigned long getWsFrames() const {
         return wsFrames;
     }
 
-    uint8_t *getWSFrameStartAddress(unsigned long frame){
-        return wsData + frame*wsFrameSize;
+    uint8_t *getWSFrameStartAddress(unsigned long frame) {
+        return wsData + frame * wsFrameSize;
     }
 
     void seekPXMatrixData(int deltaPosition);
@@ -156,12 +152,12 @@ public:
 };
 
 
-class MainSystem{
+class MainSystem {
 
 private:
-    void initializeAllHardware();
+    void beginAll();
 
-    LoadedData* data = nullptr;
+    LoadedData *data = nullptr;
     unsigned long currentFramePx = 0, currentFrameMax = 0, currentFrameWs = 0;
     unsigned long lastFrame = millis();
     int frameTime = 0;
@@ -189,7 +185,6 @@ public:
 
 
 extern MainSystem MAIN;
-extern INA219 CurrentControlCenter;
 
 
 #endif //VISORV3_MAINSYSTEM_H

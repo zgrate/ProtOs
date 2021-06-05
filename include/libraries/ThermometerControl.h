@@ -10,11 +10,12 @@
 
 #include "ConstantsAndSettings.h"
 #include "control/Definitions.h"
-#ifdef THERMOMETER_SUPPORT
+
+#ifdef THERMOMETER_HYDROMETER_SENSOR
 
 #include <Arduino.h>
 #include "DHTesp.h"
-#include "QCFanControl.h"
+#include "FanControls.h"
 
 class ThermometerControl : public Sensor {
 private:
@@ -23,8 +24,7 @@ private:
 
 public:
     ThermometerControl() {
-        this->id = 1;
-        this->begin();
+        this->id = THERMOMETER_HYDROMETER_SENSOR;
     }
 
     String requestData(const String &data) override {
@@ -42,8 +42,7 @@ public:
         }
     }
 
-private:
-    void begin() {
+    void begin() override {
         if (!_initialized) {
             dht.setup(PIN_DHT22TEMP, DHTesp::DHT11);
             _initialized = true;
@@ -74,11 +73,7 @@ private:
 
 };
 
-#ifdef THERMOMETER_GLOBAL_INSTANCE
-
-    ThermometerControl ThermometerControlInstance = ThermometerControl();
-
-#endif
+ThermometerControl ThermometerControlInstance = ThermometerControl();
 
 
 #endif //VISORV3_THERMOMETERCONTROL_H

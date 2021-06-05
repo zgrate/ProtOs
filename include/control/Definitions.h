@@ -18,13 +18,13 @@ public:
 };
 
 
-enum FileOperationType{
+enum FileOperationType {
 
     UNKNOWN_OP = 0, LS = 1, MKDIR = 2, TOUCH = 3, DEL = 4, MV = 5, CP = 6, DOWN = 7
 
 };
 
-enum FileResponseType{
+enum FileResponseType {
     UNKNOWN_RESPONSE = 0, OK_RES = 1, NOT_FOUND_RES = 2, INVALID_RES = 3
 };
 
@@ -33,14 +33,24 @@ enum SensorType {
     CONTACTRON = 6, MAGNETIC_SENSOR = 7, ADC = 8, DIGITAL_PIN = 9
 };
 
+enum ControlType {
+    UNKNOWN_CONTROL = 0, FAN_CONTROL = 1, OLED_CONTROL = 2, PX_BRIGHTNESS = 3, MAX_BRIGHTNESS_CONTROL = 4
+};
+
 enum AnimationMode {
-    UNKNOWN_ANIMATION_MODE = 0, TEST_MODE = 1, ANIMATION_FROM_FILE = 2, LIVE_ANIMATION = 3
+    UNKNOWN_ANIMATION_MODE = 0, TESTING_MODE = 1, ANIMATION_FROM_FILE = 2, LIVE_ANIMATION = 3
+};
+
+enum ScreenType {
+    UNKNOWN_SCREEN = 0, PXMATRIX_SCREEN = 1, MAX_SCREEN = 2
 };
 
 
 class Sensor {
 public:
     uint8_t id = 0;
+
+    virtual void begin() = 0;
 
     virtual String requestData(const String &data) = 0;
 
@@ -51,34 +61,50 @@ class Control {
 public:
     uint8_t id = 0;
 
+    virtual void begin() = 0;
+
     virtual String control(const String &data) = 0;
 
     virtual void test() = 0;
 };
 
 enum CapabilitiesType {
-    UNKNOWN_CAPA = 0, SCREEN_CAPA = 1, SENSOR_CAPA = 2, CONTROL_CAPA = 3
+    UNKNOWN_CAPA = 0,
+    SCREEN_CAPA = 1,
+    SENSOR_CAPA = 2,
+    CONTROL_CAPA = 3,
+    SD_CARD_CAPA = 4,
+    TIME_CAPA = 5,
+    WIFI_CAPA = 6,
+    BT_CAPA = 7
 };
 
 class CapabilitiesEntry {
 public:
     uint8_t id = 0;
     CapabilitiesType type = CapabilitiesType::UNKNOWN_CAPA;
+    uint8_t detailType = 0;
     std::map<String, String> details;
 
-    CapabilitiesEntry(uint8_t id, CapabilitiesType type) {
+    CapabilitiesEntry(uint8_t id, CapabilitiesType type, uint8_t detailType) {
         this->id = id;
         this->type = type;
+        this->detailType = detailType;
     };
 
     void addDetail(const String &key, const String &value) {
         details[key] = value;
     }
 
+    void addDetail(const String &key, const long &value) {
+        details[key] = String(value);
+    }
+
     DynamicJsonDocument toJson() {
         DynamicJsonDocument doc(1024);
         doc["id"] = id;
         doc["type"] = type;
+        doc["detail_type"] = detailType;
         auto a = doc.createNestedObject("details");
         for (const auto &e : details) {
             a[e.first] = e.second;

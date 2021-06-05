@@ -2,7 +2,7 @@
 #include "MainSystem.h"
 
 
-void setup(){
+void setup() {
     Serial.begin(115200);
     //manager.setupBLE();
     MAIN.setup();
@@ -11,7 +11,7 @@ void setup(){
     //OledControlInstance.test();
 }
 
-void loop(){
+void loop() {
     MAIN.loop();
     yield();
 

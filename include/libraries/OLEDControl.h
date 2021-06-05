@@ -7,6 +7,7 @@
 
 
 #include "ConstantsAndSettings.h"
+
 #ifdef OLED_SUPPORT
 
 #include <Arduino.h>
@@ -17,20 +18,21 @@
 class OLEDControl {
 private:
     Adafruit_SSD1306 display = Adafruit_SSD1306();
-    U8X8_SH1106_128X64_NONAME_HW_I2C oled = U8X8_SH1106_128X64_NONAME_HW_I2C(255, /* clock=*/ PIN_SCL, /* data=*/ PIN_SDA/* reset=*/);
+    U8X8_SH1106_128X64_NONAME_HW_I2C oled = U8X8_SH1106_128X64_NONAME_HW_I2C(255, /* clock=*/ PIN_SCL, /* data=*/
+                                                                             PIN_SDA/* reset=*/);
     bool _initialized = false;
 public:
 
-    OLEDControl()= default;
+    OLEDControl() = default;
 
-    void begin(){
+    void begin() {
         oled.begin();
 
         _initialized = true;
     }
 
-    void test(){
-        if(!_initialized)
+    void test() {
+        if (!_initialized)
             begin();
         oled.setFont(u8x8_font_amstrad_cpc_extended_f);
         oled.clear();
@@ -55,14 +57,9 @@ public:
 
 };
 
-#ifdef OLED_GLOBAL_INSTANCE
-
 OLEDControl OledControlInstance = OLEDControl();
 
 #endif
-
-#endif
-
 
 
 #endif //VISORV3_OLEDCONTROL_H

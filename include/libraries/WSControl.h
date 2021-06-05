@@ -6,6 +6,7 @@
 #define VISORV3_WSCONTROL_H
 
 #include "ConstantsAndSettings.h"
+
 #ifdef WS_SUPPORT
 
 #include "Arduino.h"
@@ -46,7 +47,7 @@ public:
 
         if(!_initialized)
             begin();
-        #ifdef WS_FULLPOWER_TEST
+#ifdef WS_FULLPOWER_TEST
         setBrightness(255);
         for(int i = 0; i < _ledsNumber; i++)
         {
@@ -54,7 +55,7 @@ public:
         }
         display();
         return;
-        #endif
+#endif
         int increment = 255/_ledsNumber;
         for(int i = 0; i < _ledsNumber; i++)
         {
@@ -98,11 +99,7 @@ private:
 
 };
 
-#ifdef WS_GLOBAL_INSTANCE
-
 WSControl WsControlInstance = WSControl();
-
-#endif
 
 #endif
 #endif //VISORV3_WSCONTROL_H

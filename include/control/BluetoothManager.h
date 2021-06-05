@@ -22,7 +22,7 @@
    5. Start the service.
    6. Start advertising.
 
-   A connect hander associated with the server starts a background task that performs notification
+   A begin hander associated with the server starts a background task that performs notification
    every couple of seconds.
 */
 #include "ConstantsAndSettings.h"
@@ -36,7 +36,6 @@
 #include "control/ControlFunctions.h"
 
 class BluetoothManager {
-
 
 
     BLEServer *pServer = NULL;
@@ -70,12 +69,13 @@ class BluetoothManager {
 
     class BluetoothCallback : public BLECharacteristicCallbacks {
     public:
-        explicit BluetoothCallback(BluetoothManager* instance)
-        {
+        explicit BluetoothCallback(BluetoothManager *instance) {
             bluetoothManagerInstance = instance;
         }
+
     private:
-        BluetoothManager* bluetoothManagerInstance;
+        BluetoothManager *bluetoothManagerInstance;
+
         void onRead(BLECharacteristic *chara) override {
             Serial.println("READ");
 
@@ -85,13 +85,12 @@ class BluetoothManager {
             Serial.println("WRITE");
 
             uint8_t *data = chara->getData();
-            if(BluetoothManager::checkPin(data[1], data[0])){
+            if (BluetoothManager::checkPin(data[1], data[0])) {
                 Serial.println("PIN CORRECT!");
                 //Serial.println(show_binary(data[2], 8).c_str());
                 //Serial.println(show_binary(data[3], 8).c_str());
                 //processData(data[2], data);
-            }
-            else{
+            } else {
                 Serial.println("INCORRECT PIN!");
             }
 //            chara->setValue("ASDF");
@@ -124,6 +123,7 @@ class BluetoothManager {
         Serial.print("data: ");
         Serial.println(pData[0]);
     }
+
 public:
     void setupBLE() {
         Serial.begin(115200);
@@ -188,7 +188,7 @@ public:
 
 //TODO: Only on global instance
 #ifdef BLUETOOTH_GLOBAL_INSTANCE
-    BluetoothManager BluetoothClientInstance = BluetoothManager();
+BluetoothManager BluetoothClientInstance = BluetoothManager();
 #endif
 
 #endif //VISORV3_BLUETOOTHMANAGER_H

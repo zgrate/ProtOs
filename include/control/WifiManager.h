@@ -6,26 +6,55 @@
 #define VISORV3_WIFIMANAGER_H
 
 #include "ConstantsAndSettings.h"
+
+#ifdef WIFI_SUPPORT
+
 #include "WiFi.h"
 #include "libraries/OLEDControl.h"
 
 #include "control/Packets.h"
 #include "control/ControlFunctions.h"
 
+void wifiLoop(void *pvParameters);
+
+
 class WifiManager {
 
     WiFiServer server = WiFiServer(WIFI_PORT);
+    TaskHandle_t wifiTask{};
     WiFiClient client;
 
 public:
-    void connect() {
+    void loop() {
+        client = server.available();   // listen for incoming clients
+        if (client) {                             // if you get a client,
+            debugPrint("New Client.");           // print a message out the serial port
+            String currentLine = "";                // make a String to hold incoming data from the client
+            while (client.connected()) {            // loop while the client's connected
+                if (client.available()) {             // if there's bytes to read from the client,
+                    //debugPrint("UWU");
+                    auto p = constructPacket(client, PacketPipeline::WIFI);
+                    if (p != nullptr) {
+                        Serial.print(p->getPacketId());
+                        processIncomingPacket(p);
+                    }
+                }
+                vTaskDelay(1);
+            }
+            // close the connection:
+            client.stop();
+            debugPrint("Client Disconnected.");
+        }
+    }
+
+    void begin() {
         Serial.print("Connecting to ");
-        Serial.println(WIFI_SSID);
+        Serial.println(wifiSsid);
         String s = "WIZZ-";
-        s = s + WIFI_HOSTNAME;
+        s = s + wifiHostname;
         WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
         WiFi.setHostname(s.c_str());
-        WiFi.begin(WIFI_SSID.c_str(), WIFI_PASSWORD.c_str());
+        WiFi.begin(wifiSsid.c_str(), wifiPassword.c_str());
         while (WiFi.status() != WL_CONNECTED) {
             delay(500);
             Serial.print(".");
@@ -36,7 +65,14 @@ public:
         Serial.println(WiFi.localIP());
         server.setNoDelay(true);
         server.begin();
-
+        xTaskCreatePinnedToCore(
+                wifiLoop,   /* Task function. */
+                "WifiTask",     /* name of task. */
+                10000,       /* Stack size of task */
+                nullptr,        /* parameter of the task */
+                1,           /* priority of the task */
+                &wifiTask,      /* Task handle to keep track of created task */
+                0);          /* pin task to core 0 */
 
     }
 
@@ -64,78 +100,16 @@ public:
         return true;
     }
 
-    void loop() {
-        client = server.available();   // listen for incoming clients
-        if (client) {                             // if you get a client,
-            debugPrint("New Client.");           // print a message out the serial port
-            String currentLine = "";                // make a String to hold incoming data from the client
-            while (client.connected()) {            // loop while the client's connected
-                if (client.available()) {             // if there's bytes to read from the client,
-                    //debugPrint("UWU");
-                    auto p = constructPacket(client, PacketPipeline::WIFI);
-                    if (p != nullptr) {
-                        //Serial.print("Received packet ");
-                        Serial.print(p->getPacketId());
-                        //debugPrint("");
-                        //debugPrint("End of packet!");
-                        processIncomingPacket(p);
-                    }
-
-
-//
-//                    String string1 = client.readString();
-//
-//                    debugPrint(string1);
-//                    PxMatrixControlInstance.setBrightness(string1.toInt());
-
-
-//                    char c = client.read();             // read a byte, then
-//                    Serial.write(c);                    // print it out the serial monitor
-//                    if (c == '\n') {                    // if the byte is a newline character
-//
-//                        // if the current line is blank, you got two newline characters in a row.
-//                        // that's the end of the client HTTP request, so send a response:
-//                        if (currentLine.length() == 0) {
-//                            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-//                            // and a content-type so the client knows what's coming, then a blank line:
-//                            client.println("HTTP/1.1 200 OK");
-//                            client.println("Content-type:text/html");
-//                            client.println();
-//
-//                            // the content of the HTTP response follows the header:
-//                            client.print("Click <a href=\"/H\">here</a> to turn the LED on pin 5 on.<br>");
-//                            client.print("Click <a href=\"/L\">here</a> to turn the LED on pin 5 off.<br>");
-//
-//                            // The HTTP response ends with another blank line:
-//                            client.println();
-//                            // break out of the while loop:
-//                            break;
-//                        } else {    // if you got a newline, then clear currentLine:
-//                            currentLine = "";
-//                        }
-//                    } else if (c != '\r') {  // if you got anything else but a carriage return character,
-//                        currentLine += c;      // add it to the end of the currentLine
-//                    }
-//
-//                    // Check to see if the client request was "GET /H" or "GET /L":
-//                    if (currentLine.endsWith("GET /H")) {
-//                        OledControlInstance.reset();
-//                        OledControlInstance.println("TEST");             // GET /H turns the LED on
-//                    }
-//                    if (currentLine.endsWith("GET /L")) {
-//                        OledControlInstance.reset();
-//                        OledControlInstance.println("TOST");                 // GET /L turns the LED off
-//                    }
-                }
-                vTaskDelay(1);
-            }
-            // close the connection:
-            client.stop();
-            debugPrint("Client Disconnected.");
-        }
-    }
 };
 
-
 static WifiManager WifiManagerInstance = WifiManager();
+
+void wifiLoop(void *pvParameters) {
+    while (isRunning) {
+        WifiManagerInstance.loop();
+        vTaskDelay(10);
+    }
+}
+
+#endif
 #endif //VISORV3_WIFIMANAGER_H
