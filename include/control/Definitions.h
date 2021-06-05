@@ -45,6 +45,32 @@ enum ScreenType {
     UNKNOWN_SCREEN = 0, PXMATRIX_SCREEN = 1, MAX_SCREEN = 2
 };
 
+class Screen {
+protected:
+    AnimationMode animationMode = AnimationMode::UNKNOWN_ANIMATION_MODE;
+
+public:
+    uint8_t id = 0;
+
+    virtual void begin() = 0;
+
+    virtual void drawPixels(const std::vector<Pixel> &vector) = 0;
+
+    virtual void clear() = 0;
+
+    virtual void setBrightness(const uint8_t &target) = 0;
+
+    virtual void writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) = 0;
+
+    AnimationMode getAnimationMode() {
+        return animationMode;
+    };
+
+    void setAnimationMode(const AnimationMode &mode) {
+        animationMode = mode;
+    };
+
+};
 
 class Sensor {
 public:

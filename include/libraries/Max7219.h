@@ -22,8 +22,8 @@ uint8_t testData[] = {85, 0, 85, 0, 85, 0, 85, 0, 85, 0, 85, 0, 85, 0, 85, 0, 85
  * BULK2x2 - connected as squares 2x2
  * BULK4x4 - connected as squares 4x4
  */
-enum connType {
-    DIRECT, BULK2x2, BULK4x4, BULK6x6, BULK8x8
+enum ConnectionType {
+    DIRECT, BULK2x2
 };
 
 #define MAX_DEFAULT_BULK BULK2x2
@@ -34,19 +34,16 @@ const uint16_t MAX_ON_PIXEL = 255;
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 
-class Max7219 : public Adafruit_GFX {
+class Max7219 : public Adafruit_GFX, public Screen {
 
 public:
     Max7219();
 
-    Max7219(uint8_t width, uint8_t height, uint8_t numberOfMatrices, connType connType);
-
-    //Max7219(uint8_t numberOfMatrices, SPIClass spi, uint8_t mosi, uint8_t clk, uint8_t ss,  connType connectionType);
-    ~Max7219() {
+    ~Max7219() override {
         delete _buffer;
     }
 
-    inline void begin();
+    inline void begin() override;
 
     void drawTestPattern();
 
@@ -54,17 +51,21 @@ public:
 
     void display();
 
-    void clearDisplay();
+    void clear() override;
 
     void test();
 
     hw_timer_s *timer = NULL;
 
-    bool isDisplayTaskRunning();
+    bool isDisplayTaskRunning() const;
 
-    int getFPS();
+    int getFPS() const;
 
-    void writeFrameFromBuffer(uint8_t *frameStartAddress, int frameLength);
+    void writeFrameFromBuffer(const uint8_t *frameStartAddress, const int &frameLength) override;
+
+    void drawPixels(const vector<Pixel> &vector) override;
+
+    void setBrightness(const uint8_t &target) override;
 
 private:
 
@@ -80,14 +81,14 @@ private:
 
     bool _initialized = false;
     SPIClass _spiClass;
-    connType _connectionType;
+    ConnectionType _connectionType;
     TaskHandle_t maxTaskHandle;
     bool _displayTask;
     uint8_t _fps = MAX_MAXFPS;
 
     void
     init(uint8_t numberOfMatrices, uint8_t width, uint8_t height, SPIClass spi, uint8_t mosi, uint8_t clk, uint8_t ss,
-         connType connectionType) {
+         ConnectionType connectionType) {
         _matricesNumber = numberOfMatrices;
         _buffer = new uint8_t[numberOfMatrices * 8];
         _spiClass = spi;
@@ -100,11 +101,12 @@ private:
         WIDTH = _width * 8;
         HEIGHT = _height * 8;
 
-#ifdef STANDARD_MAX_CONFIGURATION
-        prefillOffsetsDirect();
-#else
-        prefillOffsets2x2();
-#endif
+        if (connectionType == DIRECT) {
+            prefillOffsetsDirect();
+        } else {
+            prefillOffsets2x2();
+        }
+
 
         _initialized = true;
         return;
@@ -118,16 +120,10 @@ private:
                 //precalculateBulk2x2Offsets();
                 break;
                 //TODO: OTHERS
-            case BULK4x4:
-                break;
-            case BULK6x6:
-                break;
-            case BULK8x8:
-                break;
         }
     }
 
-    void sendCommand(uint8_t address, uint8_t value);
+    void sendCommand(const uint8_t &address, const uint8_t &value);
 
     void sendStartupCommands();
 
@@ -148,6 +144,7 @@ private:
 
     void prefillOffsets2x2() {
         //TODO: Change numbers to being calculated
+        int numberOfBulks = this->_matricesNumber / 4;
         for (int i = 0; i < 2; i++) {
             for (int y = 0; y < 16; y++) {
                 for (int x = 0; x < 16; x++) {
@@ -155,29 +152,18 @@ private:
                 }
             }
         }
-//        for(int y = 0; y < HEIGHT; y++)
-//        {
-//            for(int x = 0; x < WIDTH; x++)
-//            {
-////                offsets[x][y] = (y/8)*(2*8) + x;
-//                offsets[x][y] = (y/8)*8 + x + (x/8)*(8);
-//            }
-//        }
-        //   Serial.println(offsets[16][16]);
     }
-
-    void startDisplayTask();
 
 
 };
 
 Max7219::Max7219() : Adafruit_GFX(MAX_WIDTH * 8, MAX_HEIGHT * 8) {
     init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, SPIClass(MAX_SPI_CLASS), PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
-         PIN_OUTPUT_MAX_CS, BULK2x2);
+         PIN_OUTPUT_MAX_CS, BULK2x2); //TODO:
 }
 
 void Max7219::begin() {
-    clearDisplay();
+    clear();
     pinMode(_spiClk, OUTPUT);
     pinMode(_spiSS, OUTPUT);
     pinMode(_spiMosi, OUTPUT);
@@ -189,11 +175,6 @@ void Max7219::begin() {
     _initialized = true;
 }
 
-Max7219::Max7219(uint8_t width, uint8_t height, uint8_t numberOfMatrices, connType connType) : Adafruit_GFX(0, 0) {
-    init(numberOfMatrices, width, height, SPIClass(MAX_SPI_CLASS), PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
-         PIN_OUTPUT_MAX_CS, connType);
-
-}
 
 void Max7219::sendStartupCommands() {
     lastStartupCommandsSend = millis();
@@ -205,7 +186,7 @@ void Max7219::sendStartupCommands() {
 }
 
 
-void Max7219::sendCommand(uint8_t address, uint8_t value) {
+void Max7219::sendCommand(const uint8_t &address, const uint8_t &value) {
     digitalWrite(_spiSS, 0);
     for (int i = 0; i < _matricesNumber; i++) {
         _spiClass.transfer(address);
@@ -229,18 +210,8 @@ void Max7219::display() {
     pinMode(_spiClk, OUTPUT);
     pinMode(_spiSS, OUTPUT);
     pinMode(_spiMosi, OUTPUT);
-//    if(millis()-lastStartupCommandsSend >= MAX_STARTUP_REFRESH)
-//    {
-//        Serial.println("REFRESH");
-//        pinMode(_spiClk, OUTPUT);
-//        pinMode(_spiSS, OUTPUT);
-//        pinMode(_spiMosi, OUTPUT);
-//        sendStartupCommands();
-//        delayMicroseconds(100);
-//    }
     for (int i = 1; i < 9; i++) {
         digitalWrite(_spiSS, LOW);
-        //for(int dev = 0; dev < _width*_height; dev++){
         for (int dev = _matricesNumber - 1; dev >= 0; dev--) {
             _spiClass.transfer(i);
             _spiClass.transfer(_buffer[i - 1 + dev * 8]);
@@ -253,18 +224,14 @@ void Max7219::drawTestPattern() {
     if (_initialized) {
         begin();
     }
-    clearDisplay();
-    //println("ABC");
-
-    Serial.println("CO JEST");
+    clear();
     for (int i = 0; i < 96; i++) {
         _buffer[i] = millis() % 255;
     }
     display();
-    //fillRect(2,2, 10, 10, MAX_ON_PIXEL);
 }
 
-void Max7219::clearDisplay() {
+void Max7219::clear() {
     for (int i = 0; i < _matricesNumber * 8; i++) {
         _buffer[i] = 0;
     }
@@ -283,18 +250,6 @@ void displayGlobalInstance(void *display) {
 
 }
 
-void Max7219::startDisplayTask() {
-//        _displayTask = true;
-//        xTaskCreatePinnedToCore(
-//            &displayGlobalInstance, /* Function to implement the task */
-//            "MAX_TASK", /* Name of the task */
-//            10000,  /* Stack size in words */
-//            this,  /* Task input parameter */
-//            0,  /* Priority of the task */
-//            &maxTaskHandle,  /* Task handle. */
-//            1); /* Core where the task should run */
-}
-
 void Max7219::test() {
 
 
@@ -304,8 +259,7 @@ void Max7219::test() {
     sendCommand(MAX7219_TEST, 0x01);
     return;
 #endif
-    startDisplayTask();
-    clearDisplay();
+    clear();
     setTextColor(MAX_ON_PIXEL);
     setCursor(0, 0);
     print("AB");
@@ -322,31 +276,28 @@ void Max7219::test() {
     //display();
 }
 
-bool Max7219::isDisplayTaskRunning() {
+bool Max7219::isDisplayTaskRunning() const {
     return _displayTask;
 }
 
-int Max7219::getFPS() {
+int Max7219::getFPS() const {
     return _fps;
 }
 
-void Max7219::writeFrameFromBuffer(uint8_t *frameStartAddress, int frameLength) {
-//    Serial.print("WRITING ");
-//    Serial.print((unsigned long)frameStartAddress);
-//    Serial.print(" with length ");
-//    Serial.println(frameLength);
-//    for(int i = 0 ; i < frameLength; i++)
-//    {
-////        Serial.print("Before ");
-////        Serial.print(_buffer[i]);
-//
-//        _buffer[i] = *(frameStartAddress+i);
-////        Serial.print(" After ");
-////        Serial.print(_buffer[i]);
-////        Serial.println(" ");
-//    }
+void Max7219::writeFrameFromBuffer(const uint8_t *frameStartAddress, const int &frameLength) {
     memcpy(_buffer, frameStartAddress, frameLength);
     display();
+}
+
+void Max7219::drawPixels(const vector <Pixel> &vector) {
+    for (auto p : vector) {
+        this->drawPixel(p.x, p.y, p.r + p.g + p.b); //TODO : IT SHOULD NOT BE LIKE THIS
+    }
+}
+
+void Max7219::setBrightness(const uint8_t &target) {
+    if (target >= 0 && target <= 8)
+        sendCommand(MAX7219_BRIGHTNESS, target);  // Use lowest intensity
 }
 
 

@@ -14,38 +14,23 @@ MainSystem MAIN = MainSystem();
 
 TaskHandle_t Task1;
 
-
-void mainLoop() {
-
-}
-
 void mainTask(void *pvParameters) {
     Serial.print("Task1 running on core ");
     Serial.println(xPortGetCoreID());
-    WifiManagerInstance.begin();
     while (isRunning) {
         //MAIN.mainDisplayLoop();
         //WifiManagerInstance.loop();
         //TODO: OTHERS
-
-        vTaskDelay(100);
+        MAIN.mainDisplayLoop();
+        vTaskDelay(10);
         yield();
     }
 }
 
 void MainSystem::setup() {
-    //testSD();
-
-//    testSD();
-    //initializeSDCard();
-    //testPins();
-    //return;
-
-
-    executeTests();
     constructCapabilitiesList();
-    getCapabilitiesJson();
-    //loadNewFile("blob.zgd");
+    beginAll();
+    executeTests();
     xTaskCreatePinnedToCore(
             mainTask,   /* Task function. */
             "Task1",     /* name of task. */
@@ -54,33 +39,6 @@ void MainSystem::setup() {
             1,           /* priority of the task */
             &Task1,      /* Task handle to keep track of created task */
             0);          /* pin task to core 0 */
-//    Max7219ControlInstance.begin();
-//    Max7219ControlInstance.drawTestPattern();
-//    delay(1000);
-//    Max7219ControlInstance.drawTestPattern();
-//    delay(1000);
-//    Max7219ControlInstance.drawTestPattern();
-    return;
-    Max7219ControlInstance.writeFillRect(0, 0, 10, 10, 255);
-    Max7219ControlInstance.display();
-    //
-    //data->printContents();
-    return;
-
-    //PxMatrixControlInstance.fullBrightness();
-    executeTests();
-    playInfo();
-    delay(3000);
-    playAnimationOnRepeat();
-    return;
-
-    delay(3000);
-    Serial.println("TESTING YOUR PLAYBACK SOUND SYSTEM");
-    PxMatrixControlInstance.drawPixel(0, 0, PxMatrixControlInstance.white);
-    playAnimationOnRepeat();
-    //Max7219ControlInstance.drawTestPattern();
-    // BluetoothClientInstance.setupBLE();
-    // PxMatrixControlInstance.test();
 }
 
 unsigned long loopTime = 0;
@@ -111,12 +69,12 @@ void MainSystem::loop() {
 
 }
 
-void MainSystem::loadNewFile(String filename) {
+void MainSystem::loadNewFile(const String &filename) {
     if (data != nullptr) {
         delete data;
     }
     data = new LoadedData();
-    data->loadFile(move(filename));
+    data->loadFile(filename);
     currentFramePx = 0;
     currentFrameMax = 0;
     currentFrameWs = 0;
@@ -124,7 +82,7 @@ void MainSystem::loadNewFile(String filename) {
 
 }
 
-void MainSystem::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
+void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
     if (packet->getPipeline() == PacketPipeline::WIFI) {
         WifiManagerInstance.sendPacket(packet);
     }
@@ -162,6 +120,7 @@ void MainSystem::mainDisplayLoop() {
     if (millis() - lastFrame >= frameTime) {
         unsigned long start = micros();
         lastFrame = millis();
+#ifdef PX_MATRIX_SCREEN
         if (data->getPxFrames() != 0) {
             if (data->getPXMatrixMode() == PX_IN_FILE_DATA) {
                 PxMatrixControlInstance.writeFrameFromBuffer(data->getPXFrameStartAddress(currentFramePx),
@@ -177,7 +136,8 @@ void MainSystem::mainDisplayLoop() {
                 currentFramePx = 0;
             }
         }
-
+#endif
+#ifdef MAX_MATRIX_SCREEN
         if (data->getMaxFrames() != 0) {
             Max7219ControlInstance.writeFrameFromBuffer(data->getMaxFrameStartAddress(currentFrameMax),
                                                         data->getMaxFrameSize());
@@ -186,36 +146,80 @@ void MainSystem::mainDisplayLoop() {
                 currentFrameMax = 0;
             }
         }
-
+#endif
+#ifdef WS_MATRIX_SCREEN
         if (data->getWsFrames() != 0) {
 
-//            WsControlInstance.writeFrameFromBuffer(data->getWSFrameStartAddress(0), data->getWsFrameSize());
+            WsControlInstance.writeFrameFromBuffer(data->getWSFrameStartAddress(0), data->getWsFrameSize());
             currentFrameWs++;
             if (currentFrameWs >= data->getWsFrames()) {
                 currentFrameWs = 0;
             }
         }
         loopTime = micros() - start;
+#endif
+
     }
 }
 
-void MainSystem::liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector) {
+void main_ns::liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector) {
     switch (screenId) { //TODO
-        default:
+#ifdef PX_MATRIX_SCREEN
+        case PX_MATRIX_SCREEN:
             if (PxMatrixControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
                 PxMatrixControlInstance.drawPixels(vector);
             }
-    }
-}
-
-void MainSystem::clearDisplay(const uint8_t &screenId) {
-    switch (screenId) { //TODO
+            break;
+#endif
+#ifdef MAX_MATRIX_SCREEN
+        case MAX_MATRIX_SCREEN:
+            if (Max7219ControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                Max7219ControlInstance.drawPixels(vector);
+            }
+            break;
+#endif
+#ifdef WS_MATRIX_SCREEN
+            case WS_MATRIX_SCREEN:
+                if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                    WsControlInstance.drawPixels(vector);
+                }
+                break;
+#endif
         default:
-            PxMatrixControlInstance.clearDisplay();
+            break;
+    }
+
+}
+
+void main_ns::clearDisplay(const uint8_t &screenId) {
+    switch (screenId) { //TODO
+#ifdef PX_MATRIX_SCREEN
+        case PX_MATRIX_SCREEN:
+            if (PxMatrixControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                PxMatrixControlInstance.clear();
+            }
+            break;
+#endif
+#ifdef MAX_MATRIX_SCREEN
+        case MAX_MATRIX_SCREEN:
+            if (Max7219ControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                Max7219ControlInstance.clear();
+            }
+            break;
+#endif
+#ifdef WS_MATRIX_SCREEN
+            case WS_MATRIX_SCREEN:
+            if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+                Max7219ControlInstance.clear();
+            }
+            break;
+#endif
+        default:
+            break;
     }
 }
 
-String MainSystem::readSensor(const uint8_t &sensorId, uint8_t *type) {
+String main_ns::readSensor(const uint8_t &sensorId, uint8_t *type) {
     //TODO: Map sensors dynamically
     if (sensorId == 1) { //TEMPERATURE_HUMIDITY
         *type = SensorType::TEMPERATURE_HUMIDITY;
@@ -230,10 +234,10 @@ String MainSystem::readSensor(const uint8_t &sensorId, uint8_t *type) {
     }
 }
 
-void MainSystem::control(const uint8_t &controlId, const String &stringValue) {
+void main_ns::control(const uint8_t &controlId, const String &stringValue) {
     //TODO: DYNAMICALLY SET CONTROLS! FOR TIME, ONLY FAN!
     if (controlId == 1) {
-        QC3FanControlInstance.setFanSpeed(stringValue.toInt());
+        QC3FanControlInstance.control(stringValue);
     } else if (controlId == 2) {
         PxMatrixControlInstance.setBrightness(stringValue.toInt());
     }

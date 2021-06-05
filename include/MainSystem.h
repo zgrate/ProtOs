@@ -168,12 +168,13 @@ public:
 
     void loop();
 
-    void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
-
-    void loadNewFile(String filename);
+    void loadNewFile(const String &filename);
 
     void mainDisplayLoop();
 
+};
+
+namespace main_ns {
     void liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector);
 
     void clearDisplay(const uint8_t &screenId);
@@ -181,8 +182,10 @@ public:
     String readSensor(const uint8_t &sensorId, uint8_t *type);
 
     void control(const uint8_t &controlId, const String &stringValue);
-};
 
+    void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
+
+}
 
 extern MainSystem MAIN;
 

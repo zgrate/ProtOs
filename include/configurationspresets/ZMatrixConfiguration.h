@@ -16,7 +16,7 @@
 #define OLED_SUPPORT 2
 #define PX_BRIGHTNESS_CONTROL 3
 #define MAX_BRIGTHNESS_CONTROL 4
-//#define WS_MATRIX_SUPPORT
+//#define WS_BRIGTHNESS_CONTROL
 
 //SENSORS
 #define THERMOMETER_HYDROMETER_SENSOR 1
@@ -24,6 +24,7 @@
 //SCREENS
 #define PX_MATRIX_SCREEN 1
 #define MAX_MATRIX_SCREEN 2
+//#define WS_MATRIX_SCREEN 3
 
 //HARDWARE
 //SD SUPPORT
@@ -134,7 +135,7 @@
 //MAX_BULK_MODE 1 - matrices are in bulks of 4 - like in Z-visor
 #define MAX_BULK_MODE 1
 //Number of matrics
-#define MAX_MATRICES_NUMBER 12
+#define MAX_MATRICES_NUMBER 8
 //Height of matrix (in number of matrices)
 #define MAX_HEIGHT 4
 //Local width of matrices (in number of matrics)
@@ -158,7 +159,7 @@
 //]#define MAX_FULLPOWER_TEST
 #endif
 
-#ifdef WS_MATRIX_SUPPORT
+#ifdef WS_MATRIX_SCREEN
 //WS CONTROL
 //Number of leds in a row
 #define WS_NUMBEROFLEDS 64

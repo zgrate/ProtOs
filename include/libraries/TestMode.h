@@ -60,7 +60,7 @@ void executeTests() {
 #ifdef THERMOMETER_HYDROMETER_SENSOR
     ThermometerControlInstance.test();
 #endif
-#ifdef WS_MATRIX_SUPPORT
+#ifdef WS_MATRIX_SCREEN
     WsControlInstance.test();
 #endif
 #ifdef MAX_MATRIX_SCREEN

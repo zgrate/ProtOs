@@ -316,7 +316,7 @@
 //
 //
 //   // PxMatrixClient.setFastUpdate(true);
-//    PxMatrixClient.clearDisplay();
+//    PxMatrixClient.clear();
 //    PxMatrixClient.startDisplayThread();
 //    //PxMatrixClient.setBrightness(100);
 //  //display_update_enable(true);
@@ -369,12 +369,12 @@
 //        PxMatrixClient.setBrightness(temp);
 //      }
 //
-//        PxMatrixClient.clearDisplay();
+//        PxMatrixClient.clear();
 //        PxMatrixClient.setTextColor(PxMatrixClient.blue);
 //        PxMatrixClient.setCursor(2,0);
 //        PxMatrixClient.print("Z-Os Embedded v6");
 //    }
-//      PxMatrixClient.clearDisplay();
+//      PxMatrixClient.clear();
 //      setAllWhite();
 //      continue;
 //      PxMatrixClient.setTextColor(PxMatrixClient.blue);
@@ -436,7 +436,7 @@
 //    for (int xpos=matrix_width; xpos>-(matrix_width+text_length*5); xpos--)
 //    {
 //        PxMatrixClient.setTextColor(PxMatrixClient.color565(colorR,colorG,colorB));
-//        PxMatrixClient.clearDisplay();
+//        PxMatrixClient.clear();
 //        PxMatrixClient.setCursor(xpos,ypos);
 //        PxMatrixClient.println(text);
 //      delay(scroll_delay);
@@ -461,7 +461,7 @@
 //    //loopBLE();
 //    return;
 //  scroll_text(1, 50, "Welcome to PxMatrix!",255,255,255);
-//    PxMatrixClient.clearDisplay();
+//    PxMatrixClient.clear();
 //
 //  icon_index++;
 //  if (icon_index>10)
