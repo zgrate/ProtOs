@@ -51,7 +51,7 @@ void constructCapabilitiesList() {
 #endif
 #ifdef MAX_MATRIX_SCREEN
     auto max = CapabilitiesEntry(MAX_MATRIX_SCREEN, CapabilitiesType::SCREEN_CAPA, ScreenType::MAX_SCREEN);
-    max.addDetail("bulk_mode", MAX_BULK_MODE);
+    max.addDetail("bulk_mode", MAX_CONNECTION_TYPE);
     max.addDetail("matrices_number", MAX_MATRICES_NUMBER);
     max.addDetail("sizeX", MAX_WIDTH);
     max.addDetail("sizeY", MAX_HEIGHT);

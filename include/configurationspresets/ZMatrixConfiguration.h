@@ -131,6 +131,14 @@
 //Frequency of SPI used for MAX7219
 #define MAX_SPI_FREQ 2000000
 
+/*
+ * Used to calculate pixels:
+ * 1 - connected as 1 long string of matrices
+ * 2 - connected as squares 2x2
+ * 3 - connected as simple visor configuration
+ */
+#define MAX_CONNECTION_TYPE 2
+
 //If not defined - all matrices are chained
 //MAX_BULK_MODE 1 - matrices are in bulks of 4 - like in Z-visor
 #define MAX_BULK_MODE 1

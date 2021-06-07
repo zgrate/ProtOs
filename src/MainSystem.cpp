@@ -51,7 +51,12 @@ void MainSystem::loop() {
 
     //delay(1000);//
 //    testTimer = micros();
+#ifdef PX_MATRIX_SCREEN
     PxMatrixControlInstance.display();
+#else
+    vTaskDelay(10);
+#endif
+
 //    Serial.println(micros()-testTimer);
     // #Max7219ControlInstance.drawTestPattern();
 
@@ -83,9 +88,11 @@ void MainSystem::loadNewFile(const String &filename) {
 }
 
 void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
+#ifdef WIFI_SUPPORT
     if (packet->getPipeline() == PacketPipeline::WIFI) {
         WifiManagerInstance.sendPacket(packet);
     }
+#endif
 }
 
 void MainSystem::beginAll() {
@@ -93,7 +100,10 @@ void MainSystem::beginAll() {
     PxMatrixControlInstance.begin();
 #endif
 #ifdef MAX_MATRIX_SCREEN
+//    Max7219ControlInstance.init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
+//         PIN_OUTPUT_MAX_CS, (ConnectionType)MAX_CONNECTION_TYPE);
     Max7219ControlInstance.begin();
+
 #endif
 #ifdef WS_MATRIX_SCREEN
     WsControlInstance.begin();
@@ -117,6 +127,10 @@ void MainSystem::beginAll() {
 
 
 void MainSystem::mainDisplayLoop() {
+    if (data == nullptr) {
+        vTaskDelay(10);
+        return;
+    }
     if (millis() - lastFrame >= frameTime) {
         unsigned long start = micros();
         lastFrame = millis();
@@ -221,26 +235,36 @@ void main_ns::clearDisplay(const uint8_t &screenId) {
 
 String main_ns::readSensor(const uint8_t &sensorId, uint8_t *type) {
     //TODO: Map sensors dynamically
-    if (sensorId == 1) { //TEMPERATURE_HUMIDITY
+#ifdef THERMOMETER_HYDROMETER_SENSOR
+    if (sensorId == THERMOMETER_HYDROMETER_SENSOR) { //TEMPERATURE_HUMIDITY
         *type = SensorType::TEMPERATURE_HUMIDITY;
         return ThermometerControlInstance.requestData("");
-    } else if (sensorId == 2) { //CURRENT_VOLTAGE
+    }
+#endif
+#ifdef CURRENT_VOLTAGE_SENSOR
+    if (sensorId == 2) { //CURRENT_VOLTAGE
         *type = SensorType::CURRENT_VOLTAGE;
         //return readVoltageCurrent();
         return CurrentVoltageInstance.requestData("");
-    } else {
-        *type = SensorType::UNKNOWN_SENSOR;
-        return "sensor_not_found";
     }
+#endif
+    *type = SensorType::UNKNOWN_SENSOR;
+    return "sensor_not_found";
+
 }
 
 void main_ns::control(const uint8_t &controlId, const String &stringValue) {
     //TODO: DYNAMICALLY SET CONTROLS! FOR TIME, ONLY FAN!
-    if (controlId == 1) {
+#ifdef FAN_QC_SUPPORT
+    if (controlId == FAN_QC_SUPPORT) {
         QC3FanControlInstance.control(stringValue);
-    } else if (controlId == 2) {
+    }
+#endif
+#ifdef PX_BRIGHTNESS_CONTROL
+    if (controlId == PX_BRIGHTNESS_CONTROL) {
         PxMatrixControlInstance.setBrightness(stringValue.toInt());
     }
+#endif
 
 }
 

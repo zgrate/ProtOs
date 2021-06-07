@@ -6,25 +6,26 @@
 #define VISORV3_MAXPINDEFINITIONS_H
 
 //CONTROLS
-//#define FAN_QC_SUPPORT 1
-//#define OLED_SUPPORT 2
+//#define FAN_QC_CONTROL 1
+//#define OLED_CONTROL 2
 //#define PX_BRIGHTNESS_CONTROL 3
 #define MAX_BRIGTHNESS_CONTROL 4
 
 //SENSORS
-//#define THERMOMETER_HYDROMETER_SUPPORT 1
+//#define THERMOMETER_HYDROMETER_SENSOR 1
 //#define CURRENT_VOLTAGE_SENSOR 2
+
 //SCREENS
-//#define PX_MATRIX_SUPPORT 1
-#define MAX_MATRIX_SUPPORT 2
+//#define PX_MARIX_SCREEN 1
+#define MAX_MATRIX_SCREEN 2
 
 //HARDWARE
 //SD SUPPORT
-#define SD_SUPPORT
+//#define SD_SUPPORT
 //WIFI CONNECTION
-#define WIFI_SUPPORT
+//#define WIFI_SUPPORT
 //BLUETOOTH CONNECTION
-#define BLUETOOTH_SUPPORT
+//#define BLUETOOTH_SUPPORT
 //TIME
 //#define TIME_SUPPORT
 
@@ -80,20 +81,20 @@
 //#define I2C_CURRENTMETER_ADDRESS 0x0
 
 //SETTINGS
-#ifdef MAX_MATRIX_SUPPORT
+#ifdef MAX_MATRIX_SCREEN
 //MAX7219 Settings
 //Frequency of SPI used for MAX7219
 #define MAX_SPI_FREQ 2000000
 
 //If not defined - all matrices are chained
 //MAX_BULK_MODE 1 - matrices are in bulks of 4 - like in Z-visor
-#define MAX_BULK_MODE 1
+
 //Number of matrics
 #define MAX_MATRICES_NUMBER 12
 //Height of matrix (in number of matrices)
-#define MAX_HEIGHT 4
+#define MAX_HEIGHT 3
 //Local width of matrices (in number of matrics)
-#define MAX_WIDTH 2
+#define MAX_WIDTH 4
 
 //SPI CLASS used for SPI
 #define MAX_SPI_CLASS VSPI
@@ -104,8 +105,15 @@
 //Default MAX brightness
 #define MAX_DEFAULT_BRIGHTNESS 3
 
-//Global MAX7219 Instance
-#define MAX_GLOBAL_INSTANCE
+/**
+ *Defines connection type (see ConnectionType for help)
+ * 1 - DIRECT LINES
+ * 2 - BULK2x2
+ * 3 - SIMPLE VISOR
+ */
+
+#define MAX_CONNECTION_TYPE 3
+
 
 //Unfortunately, MAX matrices need to be initialized.
 // If you experience blocks of MAXes (for example screen getting fullbrigthness), you can define,
@@ -129,8 +137,6 @@
 //Default brightness of WS
 #define WS_DEFAULT_BRIGHTNESS 10
 
-//If create global instance
-#define WS_GLOBAL_INSTANCE
 
 //If defined, performs test by turning all WS leds at max power
 //#define WS_FULLPOWER_TEST
@@ -138,8 +144,6 @@
 #endif
 
 #ifdef FAN_QC_SUPPORT
-//Global instance for FanControl
-#define FAN_GLOBAL_INSTANCE
 
 //QuickCharge fan control control setup
 //Define if you want global instance of qc fan control
@@ -152,10 +156,6 @@
 #endif
 
 #ifdef THERMOMETER_HYDROMETER_SUPPORT
-//Thermometer control
-//Define if you want global instance of Thermometer control
-#define THERMOMETER_GLOBAL_INSTANCE
-
 
 #endif
 
@@ -174,21 +174,18 @@
 //PIN used to protect the connection. This is default pin, that can be overridden
 const int BLUETOOTH_CONNECTION_PIN = 11991;
 
-//Define if you want global Bluetooth instance
-#define BLUETOOTH_GLOBAL_INSTANCE
-
 #endif
 
 #ifdef WIFI_SUPPORT
 //WIFI
 //Default SSID of WIFI network
-extern String WIFI_SSID;
+extern String wifiSsid;
 
 //Default Password of WIFI network
-extern String WIFI_PASSWORD;
+extern String wifiPassword;
 
 //Wifi hostname - It will always start with 'VISS_'
-extern String WIFI_HOSTNAME;
+extern String wifiHostname;
 //WIFI PORT
 extern int WIFI_PORT;
 

@@ -66,7 +66,9 @@ void executeTests() {
 #ifdef MAX_MATRIX_SCREEN
     Max7219ControlInstance.test();
 #endif
+#ifdef PX_MATRIX_SCREEN
     PxMatrixControlInstance.test();
+#endif
 #ifdef CURRENT_VOLTAGE_SENSOR
     CurrentVoltageInstance.test(); //TODO:TEST?
 #endif

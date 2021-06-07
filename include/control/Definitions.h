@@ -44,6 +44,15 @@ enum AnimationMode {
 enum ScreenType {
     UNKNOWN_SCREEN = 0, PXMATRIX_SCREEN = 1, MAX_SCREEN = 2
 };
+/*
+ * Used to calculate pixels for MAX7219:
+ * DIRECT - connected as 1 long string of matrices
+ * BULK2x2 - connected as squares 2x2
+ * BULK4x4 - connected as squares 4x4
+ */
+enum ConnectionType {
+    DIRECT = 1, BULK2x2 = 2, SIMPLE_VISOR = 3
+};
 
 class Screen {
 protected:
