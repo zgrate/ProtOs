@@ -9,17 +9,12 @@
 
 using namespace std;
 
-void sendPacketBack(const shared_ptr<ClientBoundPacket> &packet) {
-    MAIN.forwardPacket(packet);
-}
-
-
 void processIncomingS09(const shared_ptr<S09DrawUpdate> &pointer) {
     //Serial.println("Drawing on the screen!");
     if (pointer->getMode() == 0)
-        MAIN.liveDrawUpdate(pointer->getScreenId(), pointer->getPixels());
+        main_ns::liveDrawUpdate(pointer->getScreenId(), pointer->getPixels());
     else
-        MAIN.clearDisplay(pointer->getScreenId());
+        main_ns::clearDisplay(pointer->getScreenId());
 }
 
 void processIncomingS03(const shared_ptr<S03Handshake> &pointer) {
@@ -28,7 +23,7 @@ void processIncomingS03(const shared_ptr<S03Handshake> &pointer) {
     vTaskDelay(1000);
     auto response = shared_ptr<C03Handshake>(new C03Handshake(pointer->getPipeline()));
     response->setToSend("{'data':'TEST_DATA_TO_SEND'}");
-    sendPacketBack(response);
+    main_ns::forwardPacket(response);
 }
 
 
@@ -120,12 +115,13 @@ void processIncomingS0C(const shared_ptr<S0CFileOperation> &pointer) {
             response->setResponseType(INVALID_RES);
             break;
         case DOWN:
-            MAIN.forwardPacket(download(pointer->getWorkingFile(), pointer->getPipeline(), pointer->getRequestId()));
+            main_ns::forwardPacket(
+                    download(pointer->getWorkingFile(), pointer->getPipeline(), pointer->getRequestId()));
             return;
 
 
     }
-    MAIN.forwardPacket(response);
+    main_ns::forwardPacket(response);
 
 }
 
@@ -136,7 +132,7 @@ void processIncomingS0D(const shared_ptr<S0DFileUpload> &pointer) {
         p->setRequestId(pointer->getRequestId());
         p->setResponseType(FileResponseType::INVALID_RES);
         p->setResponse("");
-        MAIN.forwardPacket(p);
+        main_ns::forwardPacket(p);
         return;
     } else if (result == 0) {
         SD_MMC.remove(pointer->getTargetFile());
@@ -147,22 +143,22 @@ void processIncomingS0D(const shared_ptr<S0DFileUpload> &pointer) {
     p->setRequestId(pointer->getRequestId());
     p->setResponseType(FileResponseType::OK_RES);
     p->setResponse("");
-    MAIN.forwardPacket(p);
+    main_ns::forwardPacket(p);
 }
 
 void processIncomingS05(const shared_ptr<S05RequestSensor> &pointer) {
     Serial.println("Processing the sensor...");
     uint8_t type = 0;
-    String response = MAIN.readSensor(pointer->getSensorId(), &type);
+    String response = main_ns::readSensor(pointer->getSensorId(), &type);
     auto sensor = shared_ptr<C04LogSensor>(new C04LogSensor(pointer->getPipeline()));
     sensor->setResponse(response);
     sensor->setLogSource(0);
     sensor->setSensorId(pointer->getSensorId());
     sensor->setType((SensorType) type);
-    MAIN.forwardPacket(sensor);
+    main_ns::forwardPacket(sensor);
 }
 
 
 void processIncomingS0E(const shared_ptr<S0EControlSet> &pointer) {
-    MAIN.control(pointer->getControlId(), pointer->getControlValue());
+    main_ns::control(pointer->getControlId(), pointer->getControlValue());
 }

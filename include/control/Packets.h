@@ -12,6 +12,7 @@
 #include "FS.h"
 #include <vector>
 #include "control/Definitions.h"
+#include "ConstantsAndSettings.h"
 
 using namespace std;
 
@@ -95,14 +96,14 @@ public:
 class S03Handshake : public ServerBoundPacket {
 
 private:
-    uint8_t appVersion;
+    uint8_t appVersion = 0;
 
 public:
     uint8_t getAppVersion() const {
         return appVersion;
     }
 
-    S03Handshake(PacketPipeline pipeline) : ServerBoundPacket(3, pipeline) {};
+    explicit S03Handshake(PacketPipeline pipeline) : ServerBoundPacket(3, pipeline) {};
 
     void readPacket(const uint8_t *array, const uint16_t &length) override {
         appVersion = array[0];
@@ -113,7 +114,7 @@ class S04ChangeAnimation : public ServerBoundPacket {
 };
 
 class S05RequestSensor : public ServerBoundPacket {
-    uint8_t sensorId;
+    uint8_t sensorId = 0;
 
 public :
     explicit S05RequestSensor(PacketPipeline pipeline) : ServerBoundPacket(5, pipeline) {};
@@ -172,7 +173,7 @@ public:
         return screenId;
     }
 
-    S09DrawUpdate(PacketPipeline pipeline) : ServerBoundPacket(9, pipeline) {}
+    explicit S09DrawUpdate(PacketPipeline pipeline) : ServerBoundPacket(9, pipeline) {}
 };
 
 class S0ARequestShutdown : public ServerBoundPacket {
@@ -192,19 +193,19 @@ public:
     explicit S0CFileOperation(PacketPipeline pipeline) : ServerBoundPacket(12, pipeline) {}
 
     void readPacket(const uint8_t *array, const uint16_t &length) override {
-        Serial.println("Reading Packet...");
+        debugPrint("Reading Packet...");
         requestId = array[0];
-        Serial.println(requestId);
+        debugPrint(requestId);
         operationType = (FileOperationType) array[1]; //TODO: Exception
-        Serial.println(operationType);
+        debugPrint(operationType);
         int wFileLength = 0;
         workingFile = readString(array, 2, &wFileLength);
-        Serial.println(workingFile);
+        debugPrint(workingFile);
         uint16_t index = 4 + wFileLength;
-        Serial.println(index);
+        debugPrint(index);
         int len = 0;
         parameters = readString(array, index, &len);
-        Serial.println(parameters);
+        debugPrint(parameters);
     }
 
     uint8_t getRequestId() const {
@@ -254,7 +255,7 @@ public:
         requestId = array[0];
         int len = 0;
         targetFile = readString(array, 1, &len);
-        Serial.println(len);
+        debugPrint(len);
         this->length = length - len - 3;
         this->buffer = new uint8_t[this->length];
         for (int i = 0; i < this->length; i++) {

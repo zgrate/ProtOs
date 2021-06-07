@@ -9,28 +9,44 @@
 #define VISORV3_THERMOMETERCONTROL_H
 
 #include "ConstantsAndSettings.h"
-#ifdef THERMOMETER_SUPPORT
+#include "control/Definitions.h"
+
+#ifdef THERMOMETER_HYDROMETER_SENSOR
 
 #include <Arduino.h>
 #include "DHTesp.h"
-#include "QCFanControl.h"
+#include "FanControls.h"
 
-class ThermometerControl{
+class ThermometerControl : public Sensor {
 private:
     bool _initialized = false;
     DHTesp dht = DHTesp();
-    std::vector<void(*)(float, float)> listOfListeners;
-public:
 
-    void begin()
-    {
-        dht.setup(PIN_DHT22TEMP, DHTesp::DHT11);
-        _initialized = true;
+public:
+    ThermometerControl() {
+        this->id = THERMOMETER_HYDROMETER_SENSOR;
     }
 
-    void registerListener(void func(float, float))
-    {
-        listOfListeners.push_back(func);
+    String requestData(const String &data) override {
+        return getTemperatureAndHumidity();
+    }
+
+    void test() override {
+        if (!_initialized)
+            begin();
+        if (getTemperatureAndHumidity()) {
+            Serial.println("Temperature Sensor connected and working!");
+            Serial.println(getTemperatureAndHumidity());
+        } else {
+            Serial.println("Error! Temperature Sensor not working!");
+        }
+    }
+
+    void begin() override {
+        if (!_initialized) {
+            dht.setup(PIN_DHT22TEMP, DHTesp::DHT11);
+            _initialized = true;
+        }
     }
 
     String getTemperatureAndHumidity() {
@@ -54,24 +70,10 @@ public:
         return ("" + String(newValues.temperature) + "?" + String(newValues.humidity));
     }
 
-    void test()
-    {
-        if (!_initialized)
-            begin();
-        if (getTemperatureAndHumidity()) {
-            Serial.println("Temperature Sensor connected and working!");
-            Serial.println(getTemperatureAndHumidity());
-        } else {
-            Serial.println("Error! Temperature Sensor not working!");
-        }
-    }
+
 };
 
-#ifdef THERMOMETER_GLOBAL_INSTANCE
-
-    ThermometerControl ThermometerControlInstance = ThermometerControl();
-
-#endif
+ThermometerControl ThermometerControlInstance = ThermometerControl();
 
 
 #endif //VISORV3_THERMOMETERCONTROL_H
