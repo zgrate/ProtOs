@@ -50,15 +50,12 @@ public:
         oled.clear();
     }
 
-    void println(const string &line) {
+    void println(const String &line) {
         oled.println(line.c_str());
     }
 
 
 };
-
-OLEDControl OledControlInstance = OLEDControl();
-
 #endif
 
 

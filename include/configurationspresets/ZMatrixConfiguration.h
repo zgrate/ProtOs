@@ -12,7 +12,7 @@
 //Here, you can define, what is supported. Defined number is an ID of a device. It should be max 255 per control, sensor and screen
 
 //CONTROLS
-#define FAN_QC_SUPPORT 1
+#define FAN_QC_CONTROL 1
 #define OLED_SUPPORT 2
 #define PX_BRIGHTNESS_CONTROL 3
 #define MAX_BRIGTHNESS_CONTROL 4
@@ -185,7 +185,7 @@
 
 #endif
 
-#ifdef FAN_QC_SUPPORT
+#ifdef FAN_QC_CONTROL
 
 
 //Minimum and maximum QC voltage

@@ -4,11 +4,11 @@
 
 void setup() {
     Serial.begin(115200);
-    MAIN.setup();
+    MainSystem::getMainSystem().setup();
 }
 
 void loop() {
-    MAIN.loop();
+    MainSystem::getMainSystem().loop();
     yield();
 
 }

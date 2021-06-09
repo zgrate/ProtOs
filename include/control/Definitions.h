@@ -44,6 +44,11 @@ enum AnimationMode {
 enum ScreenType {
     UNKNOWN_SCREEN = 0, PXMATRIX_SCREEN = 1, MAX_SCREEN = 2
 };
+
+
+enum DataType {
+    INVALID = 0, MAX_DATA = 1, WS_DATA = 2, PX_IN_FILE_DATA = 2, PX_EXTERNAL_STREAMING_DATA = 3
+};
 /*
  * Used to calculate pixels for MAX7219:
  * DIRECT - connected as 1 long string of matrices

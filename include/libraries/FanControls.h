@@ -3,7 +3,7 @@
 
 #include "ConstantsAndSettings.h"
 
-#ifdef FAN_QC_SUPPORT
+#ifdef FAN_QC_CONTROL
 
 #include "Arduino.h"
 
@@ -197,7 +197,7 @@ class QC3FanControl : public Control {
 
 private:
     QC3ClientClass qc3ClientClass;
-    uint8_t currentFanSpeedPercentage;
+    uint8_t currentFanSpeedPercentage = 0;
     int millisIncrement = (QC_MAX_VOLTAGE - QC_MIN_VOLTAGE) / 100;
     bool _initialized = false;
 public:
@@ -230,8 +230,6 @@ public:
     }
 
 };
-
-QC3FanControl QC3FanControlInstance = QC3FanControl();
 
 #endif
 #endif

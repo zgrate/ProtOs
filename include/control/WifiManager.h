@@ -69,7 +69,7 @@ public:
                 wifiLoop,   /* Task function. */
                 "WifiTask",     /* name of task. */
                 10000,       /* Stack size of task */
-                nullptr,        /* parameter of the task */
+                this,        /* parameter of the task */
                 1,           /* priority of the task */
                 &wifiTask,      /* Task handle to keep track of created task */
                 0);          /* pin task to core 0 */
@@ -102,14 +102,7 @@ public:
 
 };
 
-static WifiManager WifiManagerInstance = WifiManager();
 
-void wifiLoop(void *pvParameters) {
-    while (isRunning) {
-        WifiManagerInstance.loop();
-        vTaskDelay(10);
-    }
-}
 
 #endif
 #endif //VISORV3_WIFIMANAGER_H

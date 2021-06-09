@@ -7,7 +7,7 @@
 #ifdef CURRENT_VOLTAGE_SENSOR
 
 #include "Arduino.h"
-
+#include "INA219.h"
 
 class CurrentVoltageSensor : public Sensor {
 
@@ -32,9 +32,6 @@ public:
     }
 
 };
-
-
-static CurrentVoltageSensor CurrentVoltageInstance = CurrentVoltageSensor();
 
 #endif
 

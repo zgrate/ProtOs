@@ -5,8 +5,8 @@
 
 
 
-#ifndef VISORV3_THERMOMETERCONTROL_H
-#define VISORV3_THERMOMETERCONTROL_H
+#ifndef VISORV3_THERMOMETERSENSOR_H
+#define VISORV3_THERMOMETERSENSOR_H
 
 #include "ConstantsAndSettings.h"
 #include "control/Definitions.h"
@@ -17,13 +17,13 @@
 #include "DHTesp.h"
 #include "FanControls.h"
 
-class ThermometerControl : public Sensor {
+class ThermometerSensor : public Sensor {
 private:
     bool _initialized = false;
     DHTesp dht = DHTesp();
 
 public:
-    ThermometerControl() {
+    ThermometerSensor() {
         this->id = THERMOMETER_HYDROMETER_SENSOR;
     }
 
@@ -73,8 +73,6 @@ public:
 
 };
 
-ThermometerControl ThermometerControlInstance = ThermometerControl();
 
-
-#endif //VISORV3_THERMOMETERCONTROL_H
+#endif //VISORV3_THERMOMETERSENSOR_H
 #endif

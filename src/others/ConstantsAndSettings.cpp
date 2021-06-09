@@ -62,8 +62,8 @@ void constructCapabilitiesList() {
     capabilities.push_back(maxBrightness);
 #endif
 #endif
-#ifdef FAN_QC_SUPPORT
-    auto fan = CapabilitiesEntry(FAN_QC_SUPPORT, CapabilitiesType::CONTROL_CAPA, ControlType::FAN_CONTROL);
+#ifdef FAN_QC_CONTROL
+    auto fan = CapabilitiesEntry(FAN_QC_CONTROL, CapabilitiesType::CONTROL_CAPA, ControlType::FAN_CONTROL);
     fan.addDetail("shutdown_support", 0);
     capabilities.push_back(fan);
 #endif

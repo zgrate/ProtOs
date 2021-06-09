@@ -18,7 +18,7 @@
 //
 //#include <libraries/BluetoothManager.h>
 //#include "libraries/PxMatrix.h"
-//#include "libraries/Max7219.h"
+//#include "libraries/Max7219Screen.h"
 ////#include <Wire.h>
 //
 
@@ -75,9 +75,9 @@
 //// the brighter the display. If too large the ESP will crash
 //uint8_t display_draw_time=50; //10-50 is usually fine
 //
-////PxMATRIX display(128,32,P_LAT, P_OE,P_A,P_B,P_C);
-////PxMATRIX display(128,32, P_LAT, P_OE, P_REG_LATCH);
-////PxMATRIX display(64,32,P_LAT, P_OE,P_A,P_B,P_C,P_D,P_E);
+////PxMatrixScreen display(128,32,P_LAT, P_OE,P_A,P_B,P_C);
+////PxMatrixScreen display(128,32, P_LAT, P_OE, P_REG_LATCH);
+////PxMatrixScreen display(64,32,P_LAT, P_OE,P_A,P_B,P_C,P_D,P_E);
 //
 //
 //
