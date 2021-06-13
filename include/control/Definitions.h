@@ -70,8 +70,16 @@ public:
 
     virtual void drawPixels(const std::vector<Pixel> &vector) = 0;
 
+    /**
+     * Clears the matrix (sets all the pixels to BLACK color)
+     */
     virtual void clear() = 0;
 
+    /**
+     * Sets the brightness of the matrix
+     * Note: This is implementation - specific.
+     * @param target Target brightness of the matrix
+     */
     virtual void setBrightness(const uint8_t &target) = 0;
 
     virtual void writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) = 0;

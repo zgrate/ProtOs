@@ -251,7 +251,7 @@ extern String wifiPassword;
 //Wifi hostname - It will always start with 'VISS_'
 extern String wifiHostname;
 //WIFI PORT
-extern int WIFI_PORT;
+extern int wifiPort;
 
 #endif
 //Define if you want debug output to be redirected to Serial

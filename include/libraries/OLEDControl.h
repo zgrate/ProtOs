@@ -17,10 +17,9 @@
 
 class OLEDControl {
 private:
-    Adafruit_SSD1306 display = Adafruit_SSD1306();
     U8X8_SH1106_128X64_NONAME_HW_I2C oled = U8X8_SH1106_128X64_NONAME_HW_I2C(255, /* clock=*/ PIN_SCL, /* data=*/
                                                                              PIN_SDA/* reset=*/);
-    bool _initialized = false;
+    bool ini = false;
 public:
 
     OLEDControl() = default;
@@ -28,11 +27,11 @@ public:
     void begin() {
         oled.begin();
 
-        _initialized = true;
+        ini = true;
     }
 
     void test() {
-        if (!_initialized)
+        if (!ini)
             begin();
         oled.setFont(u8x8_font_amstrad_cpc_extended_f);
         oled.clear();

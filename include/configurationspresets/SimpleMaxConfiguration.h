@@ -18,6 +18,7 @@
 //SCREENS
 //#define PX_MARIX_SCREEN 1
 #define MAX_MATRIX_SCREEN 2
+#define WS_MATRIX_SCREEN 3
 
 //HARDWARE
 //SD SUPPORT
@@ -124,15 +125,16 @@
 //]#define MAX_FULLPOWER_TEST
 #endif
 
-#ifdef WS_MATRIX_SUPPORT
+#ifdef WS_MATRIX_SCREEN
+
 //WS CONTROL
 //Number of leds in a row
-#define WS_NUMBEROFLEDS 64
+#define WS_NUMBEROFLEDS 6
 //Width of matrix in leds count
-#define WS_WIDTH 8
+#define WS_WIDTH 6
 
 //Height of matrix in leds count
-#define WS_HEIGHT 8
+#define WS_HEIGHT 1
 
 //Default brightness of WS
 #define WS_DEFAULT_BRIGHTNESS 10

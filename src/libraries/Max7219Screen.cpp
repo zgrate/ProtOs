@@ -4,21 +4,61 @@
 
 #include "libraries/Max7219Screen.h"
 
+#if MAX_CONNECTION_TYPE == 3
+uint8_t SIMPLE_VISOR_OFFSETS[32][24] = {
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+        {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
+
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+        {15, 14, 13, 12, 11, 10, 9,  8,  31, 30, 29, 28, 27, 26, 25, 24, 79, 78, 77, 76, 75, 74, 73, 72},
+
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+        {55, 54, 53, 52, 51, 50, 49, 48, 39, 38, 37, 36, 35, 34, 33, 32, 87, 86, 85, 84, 83, 82, 81, 80},
+
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88},
+        {63, 62, 61, 60, 59, 58, 57, 56, 47, 46, 45, 44, 43, 42, 41, 40, 95, 94, 93, 92, 91, 90, 89, 88}
+};
+#endif
+
 Max7219Screen::Max7219Screen() : Adafruit_GFX(MAX_WIDTH * 8, MAX_HEIGHT * 8) {
     init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
          PIN_OUTPUT_MAX_CS, (ConnectionType) MAX_CONNECTION_TYPE); //TODO:
 }
 
 void Max7219Screen::begin() {
-    pinMode(_spiClk, OUTPUT);
-    pinMode(_spiSS, OUTPUT);
-    pinMode(_spiMosi, OUTPUT);
-    maxSpiClass.begin(_spiClk, -1, _spiMosi, _spiSS);
+    pinMode(spiClk, OUTPUT);
+    pinMode(spiSS, OUTPUT);
+    pinMode(spiMosi, OUTPUT);
+    maxSpiClass.begin(spiClk, -1, spiMosi, spiSS);
     maxSpiClass.setFrequency(MAX_SPI_FREQ);
     maxSpiClass.setBitOrder(MSBFIRST);
     maxSpiClass.setDataMode(SPI_MODE0);
     sendStartupCommands();
-    _initialized = true;
+    initialized = true;
     clear();
 
 }
@@ -35,12 +75,12 @@ void Max7219Screen::sendStartupCommands() {
 
 
 void Max7219Screen::sendCommand(const uint8_t &address, const uint8_t &value) {
-    digitalWrite(_spiSS, 0);
-    for (int i = 0; i < _matricesNumber; i++) {
+    digitalWrite(spiSS, 0);
+    for (int i = 0; i < matricesNumber; i++) {
         maxSpiClass.transfer(address);
         maxSpiClass.transfer(value);
     }
-    digitalWrite(_spiSS, 1);
+    digitalWrite(spiSS, 1);
 }
 
 void Max7219Screen::drawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -48,111 +88,70 @@ void Max7219Screen::drawPixel(int16_t x, int16_t y, uint16_t color) {
 #if MAX_CONNECTION_TYPE == 3
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
         if (color > 0) {
-            _buffer[offsets[x][y]] |= 1 << (x % 8);
+            buffer[offsets[x][y]] |= 1 << (x % 8);
         } else {
-            _buffer[offsets[x][y]] &= ~(1 << (x % 8));
+            buffer[offsets[x][y]] &= ~(1 << (x % 8));
         }
     }
 #else //TODO: THINK OF IT... Maybe just change rotation mode? of something....
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
         if (color > 0) {
-            _buffer[offsets[x][y]] |= 1 << (y % 8);
+            buffer[offsets[x][y]] |= 1 << (y % 8);
         } else {
-            _buffer[offsets[x][y]] &= ~(1 << (y % 8));
+            buffer[offsets[x][y]] &= ~(1 << (y % 8));
         }
     }
 #endif
 }
 
 void Max7219Screen::display() {
-    pinMode(_spiClk, OUTPUT);
-    pinMode(_spiSS, OUTPUT);
-    pinMode(_spiMosi, OUTPUT);
+    pinMode(spiClk, OUTPUT);
+    pinMode(spiSS, OUTPUT);
+    pinMode(spiMosi, OUTPUT);
     for (int i = 1; i < 9; i++) {
-        digitalWrite(_spiSS, LOW);
-        for (int dev = _matricesNumber - 1; dev >= 0; dev--) {
+        digitalWrite(spiSS, LOW);
+        for (int dev = matricesNumber - 1; dev >= 0; dev--) {
             maxSpiClass.transfer(i);
-            maxSpiClass.transfer(_buffer[i - 1 + dev * 8]);
+            maxSpiClass.transfer(buffer[i - 1 + dev * 8]);
         }
-        digitalWrite(_spiSS, HIGH);
+        digitalWrite(spiSS, HIGH);
     }
-}
-
-void Max7219Screen::drawTestPattern() {
-    if (_initialized) {
-        begin();
-    }
-    clear();
-    for (int i = 0; i < 96; i++) {
-        _buffer[i] = millis() % 255;
-    }
-    display();
 }
 
 void Max7219Screen::clear() {
-    for (int i = 0; i < _matricesNumber * 8; i++) {
-        _buffer[i] = 0;
+    for (int i = 0; i < matricesNumber * 8; i++) {
+        buffer[i] = 0;
     }
     display();
 }
 
 void Max7219Screen::test() {
-    if (!_initialized)
+    if (!initialized)
         begin();
     clear();
-    pinMode(_spiClk, OUTPUT);
-    pinMode(_spiSS, OUTPUT);
-    pinMode(_spiMosi, OUTPUT);
-    int a = 0;
-    for (int i = 1; i < 4; i += 2) {
-        digitalWrite(_spiSS, LOW);
-        for (int dev = _matricesNumber - 1; dev >= 0; dev--) {
-            maxSpiClass.transfer(i);
-            maxSpiClass.transfer(255);
-        }
-        digitalWrite(_spiSS, HIGH);
-    }
-//return;
+    pinMode(spiClk, OUTPUT);
+    pinMode(spiSS, OUTPUT);
+    pinMode(spiMosi, OUTPUT);
 #ifdef MAX_FULLPOWER_TEST
     sendCommand(MAX7219_TEST, 0x01);
     return;
 #endif
-    clear();
     setTextColor(MAX_ON_PIXEL);
     setCursor(0, 0);
     char c = 'A';
-    for (int n = 0; n < _matricesNumber * 2; n++) {
+    for (int n = 0; n < matricesNumber * 2; n++) {
         print(c);
         c++;
     }
     display();
-    // clear();
-    //drawLine(0, 0, 0, 16, 1);
-    //display();
-    return;
-    fillRect(1, 9, 6, 6, 1);
-    drawTriangle(8, 8, 15, 8, 15, 15, 1);
-    setCursor(0, 16);
-    print("CD");
-    drawCircle(4, 27, 3, 1);
-    drawLine(8, 24, 15, 24, 1);
-    drawLine(15, 24, 8, 31, 1);
-    //drawTriangle(8, 24, 15, 24, 8,31, 1);
-    display();
-    Serial.println("MAX7219 initialized. Check if test pattern is on the screen!");
-    //display();
-}
-
-bool Max7219Screen::isDisplayTaskRunning() const {
-    return _displayTask;
 }
 
 int Max7219Screen::getFPS() const {
-    return _fps;
+    return fps;
 }
 
 void Max7219Screen::writeFrameFromBuffer(const uint8_t *frameStartAddress, const int &frameLength) {
-    memcpy(_buffer, frameStartAddress, frameLength);
+    memcpy(buffer, frameStartAddress, frameLength);
     display();
 }
 

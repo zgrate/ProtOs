@@ -3,7 +3,7 @@
 //
 
 #include "control/WifiManager.h"
-
+#ifdef WIFI_SUPPORT
 void wifiLoop(void *pvParameters) {
     auto *wifi = static_cast<WifiManager *>(pvParameters);
     while (isRunning) {
@@ -11,3 +11,4 @@ void wifiLoop(void *pvParameters) {
         vTaskDelay(10);
     }
 }
+#endif

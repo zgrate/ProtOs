@@ -7,7 +7,7 @@
 
 #include "ConstantsAndSettings.h"
 
-#ifdef WS_SUPPORT
+#ifdef WS_MATRIX_SCREEN
 
 #include "Arduino.h"
 #define FASTLED_ALLOW_INTERRUPTS 1
@@ -16,90 +16,87 @@
 #include "Adafruit_GFX.h"
 
 
-class WSControl: public Adafruit_GFX{
+class WSControl : public Adafruit_GFX, Screen {
 
 public:
-    WSControl() : Adafruit_GFX(WS_WIDTH, WS_HEIGHT), ledSet(_ledsArray, WS_NUMBEROFLEDS) {
+    WSControl() : Adafruit_GFX(WS_WIDTH, WS_HEIGHT) {
     }
 
-    void begin() {
-        FastLED.addLeds<WS2811, PIN_OUTPUT_WS, GRB>(_ledsArray, _ledsNumber);
-        FastLED.setBrightness(_brightness);
+    void begin() override {
+        FastLED.addLeds<WS2812, PIN_OUTPUT_WS, GRB>(ledsArray, leds);
+        FastLED.setBrightness(brightness);
         FastLED.setDither(DISABLE_DITHER);
         FastLED.setMaxRefreshRate(50, false);
-        _initialized = true;
-    }
-    void drawPixel(int16_t x, int16_t y, uint16_t color) override{
-        _ledsArray[y * _width + x] = color;
+        initialized = true;
     }
 
-    void display()
-    {
+    void drawPixels(const vector<Pixel> &vector) override {
+        for (auto p : vector) {
+            ledsArray[p.y * _width + p.x] = CRGB(p.r, p.g, p.b);
+        }
+    }
+
+    void clear() override {
+        FastLED.clear(true);
+    }
+
+    void writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) override {
+        Serial.println((unsigned long) buffer);
+        Serial.println(bufferLength);
+        FastLED.clearData();
+        for (int i = 0; i < bufferLength; i += 3) {
+            ledsArray[i] = CRGB(*(buffer + i), *(buffer + i + 1), *(buffer + i + 2));
+        }
+        display();
+
+        delay(1000);
+    }
+
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override {
+        ledsArray[y * _width + x] = color;
+    }
+
+    void display() {
         FastLED.show();
     }
-    void setBrightness(const uint8_t& brightness)
-    {
-        this->_brightness = brightness;
+
+    void setBrightness(const uint8_t &brightness) override {
+        this->brightness = brightness;
         FastLED.setBrightness(brightness);
     }
-    void test()
-    {
 
-        if(!_initialized)
+    void test() {
+
+        if (!initialized)
             begin();
 #ifdef WS_FULLPOWER_TEST
         setBrightness(255);
-        for(int i = 0; i < _ledsNumber; i++)
+        for(int i = 0; i < leds; i++)
         {
-            _leds[i] = CRGB::White;
+            ledsArray[i] = CRGB::White;
         }
         display();
         return;
 #endif
-        int increment = 255/_ledsNumber;
-        for(int i = 0; i < _ledsNumber; i++)
-        {
-            _ledsArray[i] = CHSV(increment * i, 255, 255);
+        int increment = 255 / leds;
+        for (int i = 0; i < leds; i++) {
+            ledsArray[i] = CHSV(increment * i, 255, 255);
         }
         display();
         Serial.println("WS Graphics sent! Check if there is rainbow pattern on the WS");
     }
+
     bool set = false;
-    void writeFrameFromBuffer(uint8_t *startAddress, int frameLength) {
-        Serial.println((unsigned long)startAddress);
-        Serial.println(frameLength);
-        if(!set)
-        {
-            set = true;
-        int frame = 0;
-        FastLED.clearData();
-
-        for(int i = 0; i < frameLength; i+=3)
-        {
-            _ledsArray[frame++] = CRGB(*(startAddress + i), *(startAddress + i + 1), *(startAddress + i + 2));
-            //Serial.print(_leds[frame-1]);
-            //Serial.print(" ");
-        }
-
-            }
-        display();
-
-        delay(1000);
-
-    }
 
 private:
-    CRGB _ledsArray[WS_NUMBEROFLEDS];
-    CRGBSet ledSet;
-    int _ledsNumber = WS_NUMBEROFLEDS;
-    int _pin = PIN_OUTPUT_WS;
-    int _brightness = WS_DEFAULT_BRIGHTNESS;
-    bool _initialized = false;
+    CRGB ledsArray[WS_NUMBEROFLEDS];
+//    CRGBSet ledSet;
+    int leds = WS_NUMBEROFLEDS;
+    int brightness = WS_DEFAULT_BRIGHTNESS;
+    bool initialized = false;
 
 
 };
-
-WSControl WsControlInstance = WSControl();
 
 #endif
 #endif //VISORV3_WSCONTROL_H

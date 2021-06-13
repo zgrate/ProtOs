@@ -9,7 +9,7 @@ String wifiPassword = "OculusQuest2";
 String wifiHostname = "ZVIS";
 String ipAddress = "";
 bool isRunning = true;
-int WIFI_PORT = 48999;
+int wifiPort = 48999;
 
 #ifdef SERIAL_DEBUG
 
@@ -145,7 +145,7 @@ DynamicJsonDocument getDocumentToSave() {
     auto obj = doc.createNestedObject("network_connection");
     obj["ssid"] = wifiSsid;
     obj["pass"] = wifiPassword;
-    obj["port"] = WIFI_PORT;
+    obj["port"] = wifiPort;
     obj["hostname"] = wifiHostname;
     return doc;
 }
@@ -172,7 +172,7 @@ void readConfiguration() {
         wifiSsid = ssid;
         const char *password = doc["network_connection"]["pass"];
         wifiPassword = password;
-        WIFI_PORT = doc["network_connection"]["port"];
+        wifiPort = doc["network_connection"]["port"];
         const char *hostname = doc["network_connection"]["hostname"];
         wifiHostname = hostname;
     }

@@ -26,6 +26,10 @@
 #define DATA_VERSION 1
 
 
+#ifdef PX_MATRIX_SCREEN
+void mainPxScreenThread();
+#endif
+
 class LoadedData {
 private:
     String fileName;
@@ -158,27 +162,56 @@ public:
     void readPxToBuffer(uint8_t *buffer);
 };
 
-
+/**
+ * Main Class, this is the entry point of the Visor App
+ */
 class MainSystem {
 
 private:
+    /**
+     * Initializes all the hardware of the system
+     */
     void beginAll();
 
+    /**
+     * Stores current loaded data from the SD Card
+     */
     LoadedData *data = nullptr;
+
+    /**
+     * Helper variables for main loop
+     */
     unsigned long currentFramePx = 0, currentFrameMax = 0, currentFrameWs = 0;
     unsigned long lastFrame = millis();
     int frameTime = 0;
 
 
 public:
+    /**
+     * Static Singleton of the main system instance
+     * @return Main instance of MainSystem
+     */
     static MainSystem &getMainSystem();
 
+    /**
+     * Setup method, that should be executed from global setup() method
+     */
     void setup();
 
+    /**
+     * Main loop of application, that should be executed from global loop() method
+     */
     void loop();
 
+    /**
+     * TODO
+     * @param filename
+     */
     void loadNewFile(const String &filename);
 
+    /**
+     * Main loop of display thread, that plays animations
+     */
     void mainDisplayLoop();
 
 #ifdef MAX_MATRIX_SCREEN
@@ -191,26 +224,38 @@ public:
 
 #endif
 #ifdef PX_MATRIX_SCREEN
-private:
-    PxMatrixScreen pxMatrixScreen = PxMatrixScreen(PxMATRIX_WIDTH, PxMATRIX_HEIGHT, PIN_OUTPUT_PX_MOSI,
-                                                   PIN_OUTPUT_PX_CLK,
-                                                   PIN_OUTPUT_PX_STROBO, PIN_OUTPUT_PX_OE, PIN_OUTPUT_PX_REGLATCH);
-public:
-    PxMatrixScreen &getPxMatrixScreen() {
-        return pxMatrixScreen;
-    }
+    private:
+        PxMatrixScreen pxMatrixScreen = PxMatrixScreen(PxMATRIX_WIDTH, PxMATRIX_HEIGHT, PIN_OUTPUT_PX_MOSI,
+                                                       PIN_OUTPUT_PX_CLK,
+                                                       PIN_OUTPUT_PX_STROBO, PIN_OUTPUT_PX_OE, PIN_OUTPUT_PX_REGLATCH);
+    public:
+        PxMatrixScreen &getPxMatrixScreen() {
+            return pxMatrixScreen;
+        }
+        void startDisplayThread(){
+            pxMatrixScreen.timer = timerBegin(0, 80, true);
+            timerAttachInterrupt(pxMatrixScreen.timer, &mainPxScreenThread, true);
+            timerAlarmWrite(pxMatrixScreen.timer, PxMATRIX_INTERRUPT_TIMER, true);
+            timerAlarmEnable(pxMatrixScreen.timer);
+        }
 
 #endif
 #ifdef WS_MATRIX_SCREEN
-    //TODO
+private:
+    WSControl wsControl;
+public:
+    WSControl &getWsControl() {
+        return wsControl;
+    }
+
 #endif
 #ifdef THERMOMETER_HYDROMETER_SENSOR
-private:
-    ThermometerSensor thermometerSensor;
-public:
-    ThermometerSensor &getThermometerSensor() {
-        return thermometerSensor;
-    }
+    private:
+        ThermometerSensor thermometerSensor;
+    public:
+        ThermometerSensor &getThermometerSensor() {
+            return thermometerSensor;
+        }
 
 #endif
 #ifdef CURRENT_VOLTAGE_SENSOR
@@ -252,34 +297,37 @@ public:
 
 #ifdef SD_SUPPORT
 
-    void testSD() {
-        if (!SD_MMC.begin("/sdcard", true)) {
-            Serial.println("Card Mount Failed");
-            return;
-        }
-        uint8_t cardType = SD_MMC.cardType();
+    /**
+     * Executes SD card setup
+     */
+        static void testSD() {
+            if (!SD_MMC.begin("/sdcard", true)) {
+                Serial.println("Card Mount Failed");
+                return;
+            }
+            uint8_t cardType = SD_MMC.cardType();
 
-        if (cardType == CARD_NONE) {
-            Serial.println("No SD_MMC card attached");
-            return;
-        }
+            if (cardType == CARD_NONE) {
+                Serial.println("No SD_MMC card attached");
+                return;
+            }
 
-        Serial.print("SD_MMC Card Type: ");
-        if (cardType == CARD_MMC) {
-            Serial.println("MMC");
-        } else if (cardType == CARD_SD) {
-            Serial.println("SDSC");
-        } else if (cardType == CARD_SDHC) {
-            Serial.println("SDHC");
-        } else {
-            Serial.println("UNKNOWN");
-        }
+            Serial.print("SD_MMC Card Type: ");
+            if (cardType == CARD_MMC) {
+                Serial.println("MMC");
+            } else if (cardType == CARD_SD) {
+                Serial.println("SDSC");
+            } else if (cardType == CARD_SDHC) {
+                Serial.println("SDHC");
+            } else {
+                Serial.println("UNKNOWN");
+            }
 
-        uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-        Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
-        Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-        Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
-    }
+            uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+            Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+            Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
+            Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
+        }
 
 #endif
 
@@ -289,7 +337,7 @@ public:
         thermometerSensor.test();
 #endif
 #ifdef WS_MATRIX_SCREEN
-        WsControlInstance.test();
+        wsControl.test();
 #endif
 #ifdef MAX_MATRIX_SCREEN
         max7219Screen.test();

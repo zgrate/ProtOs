@@ -4,7 +4,6 @@
 
 #include "MainSystem.h"
 
-#include "libraries/TestMode.h"
 #include "libraries/PxMatrix.h"
 #include "control/BluetoothManager.h"
 #include "control/ControlFunctions.h"
@@ -39,36 +38,13 @@ void MainSystem::setup() {
             0);          /* pin task to core 0 */
 }
 
-unsigned long loopTime = 0;
-
-unsigned long lastTick = 0;
-
-unsigned long testTimer = 0;
 
 void MainSystem::loop() {
-
-    //delay(1000);//
-//    testTimer = micros();
 #ifdef PX_MATRIX_SCREEN
     pxMatrixScreen.display();
 #else
     vTaskDelay(10);
 #endif
-
-//    Serial.println(micros()-testTimer);
-    // #Max7219ControlInstance.drawTestPattern();
-
-//    vTaskDelay(10);
-    return;
-    //BluetoothClientInstance.loopBLE();
-    //yield();
-    //Serial.println(lastTime);
-    //
-    if ((millis() - lastTick) >= 1000) {
-        lastTick = millis();
-        Serial.println(loopTime);
-    }
-    yield();
 
 }
 
@@ -96,15 +72,14 @@ void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
 void MainSystem::beginAll() {
 #ifdef PX_MATRIX_SCREEN
     pxMatrixScreen.begin();
+    startDisplayThread();
 #endif
 #ifdef MAX_MATRIX_SCREEN
-//    Max7219ControlInstance.init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
-//         PIN_OUTPUT_MAX_CS, (ConnectionType)MAX_CONNECTION_TYPE);
     max7219Screen.begin();
 
 #endif
 #ifdef WS_MATRIX_SCREEN
-    WsControlInstance.begin();
+    wsControl.begin();
 #endif
 #ifdef THERMOMETER_HYDROMETER_SENSOR
     thermometerSensor.begin();
@@ -130,7 +105,6 @@ void MainSystem::mainDisplayLoop() {
         return;
     }
     if (millis() - lastFrame >= frameTime) {
-        unsigned long start = micros();
         lastFrame = millis();
 #ifdef PX_MATRIX_SCREEN
         if (data->getPxFrames() != 0) {
@@ -162,13 +136,12 @@ void MainSystem::mainDisplayLoop() {
 #ifdef WS_MATRIX_SCREEN
         if (data->getWsFrames() != 0) {
 
-            WsControlInstance.writeFrameFromBuffer(data->getWSFrameStartAddress(0), data->getWsFrameSize());
+            wsControl.writeFrameFromBuffer(data->getWSFrameStartAddress(0), data->getWsFrameSize());
             currentFrameWs++;
             if (currentFrameWs >= data->getWsFrames()) {
                 currentFrameWs = 0;
             }
         }
-        loopTime = micros() - start;
 #endif
 
     }
@@ -197,11 +170,11 @@ void main_ns::liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vecto
             break;
 #endif
 #ifdef WS_MATRIX_SCREEN
-            case WS_MATRIX_SCREEN:
-                if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
-                    WsControlInstance.drawPixels(vector);
-                }
-                break;
+        case WS_MATRIX_SCREEN:
+//                if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+//                    WsControlInstance.drawPixels(vector);
+//                }
+            break;
 #endif
         default:
             break;
@@ -226,10 +199,10 @@ void main_ns::clearDisplay(const uint8_t &screenId) {
             break;
 #endif
 #ifdef WS_MATRIX_SCREEN
-            case WS_MATRIX_SCREEN:
-            if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
-                Max7219ControlInstance.clear();
-            }
+        case WS_MATRIX_SCREEN:
+            //if (WsControlInstance.getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
+            //MainSystem::getMainSystem().getWsControl().clear();
+            //}
             break;
 #endif
         default:
@@ -519,4 +492,12 @@ void LoadedData::readPxToBuffer(uint8_t *buffer) {
     }
 }
 
+#ifdef PX_MATRIX_SCREEN
+void mainPxScreenThread() {
+    portENTER_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
+    MainSystem::getMainSystem().getPxMatrixScreen().display();
+    //   display.displayTestPattern(70);
+    portEXIT_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
 
+}
+#endif

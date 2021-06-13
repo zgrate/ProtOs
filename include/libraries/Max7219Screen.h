@@ -16,46 +16,8 @@
 
 #if MAX_CONNECTION_TYPE == 3
 
-uint8_t SIMPLE_VISOR_OFFSETS[32][24] = {
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
-        {7,6,5,4,3,2,1,0,23,22,21,20,19,18,17,16,71,70,69,68,67,66,65,64},
+extern uint8_t SIMPLE_VISOR_OFFSETS[32][24];
 
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-        {15,14,13,12,11,10,9,8,31,30,29,28,27,26,25,24,79,78,77,76,75,74,73,72},
-
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-        {55,54,53,52,51,50,49,48,39,38,37,36,35,34,33,32,87,86,85,84,83,82,81,80},
-
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88},
-        {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,95,94,93,92,91,90,89,88}
-};
-//{0,0,0,0,0,0,0,0,8,8,8,8,8,8,8,8,48,48,48,48,48,48,48,48,56,56,56,56,56,56,56,56 }
-
-//[0][1-8] - 0
 #endif
 
 #include <Arduino.h>
@@ -74,9 +36,7 @@ public:
 
     Max7219Screen();
 
-    inline void begin() override;
-
-    void drawTestPattern();
+    void begin() override;
 
     void drawPixel(int16_t x, int16_t y, uint16_t color) override;
 
@@ -86,10 +46,6 @@ public:
 
     void test();
 
-    hw_timer_s *timer = NULL;
-
-    bool isDisplayTaskRunning() const;
-
     int getFPS() const;
 
     void writeFrameFromBuffer(const uint8_t *frameStartAddress, const int &frameLength) override;
@@ -98,16 +54,16 @@ public:
 
     void setBrightness(const uint8_t &target) override;
 
-    void init(uint8_t numberOfMatrices, uint8_t width, uint8_t height, uint8_t mosi, uint8_t clk, uint8_t ss,
-              ConnectionType connectionType) {
-        _matricesNumber = numberOfMatrices;
-        //_buffer = new uint8_t[numberOfMatrices * 8];
-        //Serial.println("BUFFER WRITING COMPLETED! RESULT: " + String(_buffer == nullptr));
+    void init(const uint8_t &numberOfMatrices, const uint8_t &width, const uint8_t &height, const uint8_t &mosi,
+              const uint8_t &clk, const uint8_t &ss,
+              const ConnectionType &connectionType) {
+        matricesNumber = numberOfMatrices;
+        //buffer = new uint8_t[numberOfMatrices * 8];
+        //Serial.println("BUFFER WRITING COMPLETED! RESULT: " + String(buffer == nullptr));
 
-        _spiMosi = mosi;
-        _spiClk = clk;
-        _spiSS = ss;
-        _connectionType = connectionType;
+        spiMosi = mosi;
+        spiClk = clk;
+        spiSS = ss;
         _height = height;
         _width = width;
         WIDTH = _width * 8;
@@ -115,8 +71,8 @@ public:
 
         if (connectionType == SIMPLE_VISOR) {
 #if MAX_CONNECTION_TYPE == 3
-            for(int x = 0; x < WIDTH; x++){
-                for(int y = 0; y < HEIGHT; y++){
+            for (int x = 0; x < WIDTH; x++) {
+                for (int y = 0; y < HEIGHT; y++) {
                     offsets[x][y] = SIMPLE_VISOR_OFFSETS[x][y];
                 }
             }
@@ -131,20 +87,15 @@ public:
 private:
 
     int offsets[MAX_WIDTH * 8][MAX_HEIGHT * 8];
-    uint8_t _buffer[MAX_MATRICES_NUMBER * 8];
-    uint8_t _matricesNumber;
-    uint8_t _spiMosi;
-    uint8_t _spiClk;
-    uint8_t _spiSS;
-    uint8_t _height;
-    uint8_t _width;
+    uint8_t buffer[MAX_MATRICES_NUMBER * 8];
+    uint8_t matricesNumber = MAX_MATRICES_NUMBER;
+    uint8_t spiMosi = PIN_OUTPUT_MAX_MOSI;
+    uint8_t spiClk = PIN_OUTPUT_MAX_CLK;
+    uint8_t spiSS = PIN_OUTPUT_MAX_CS;
     unsigned long lastStartupCommandsSend = 0;
 
-    bool _initialized = false;
-    ConnectionType _connectionType;
-    TaskHandle_t maxTaskHandle;
-    bool _displayTask;
-    uint8_t _fps = MAX_MAXFPS;
+    bool initialized = false;
+    uint8_t fps = MAX_MAXFPS;
 
 
     void sendCommand(const uint8_t &address, const uint8_t &value);
@@ -173,7 +124,7 @@ private:
         //TODO: Change numbers to being calculated
         int squarePixelsLength = squareLength * 8;
         int totalPixelsPerBulk = squarePixelsLength * squareLength;
-        int numberOfBulks = this->_matricesNumber / 4;
+        int numberOfBulks = this->matricesNumber / 4;
         for (int i = 0; i < numberOfBulks; i++) {
             for (int y = 0; y < squarePixelsLength; y++) {
                 for (int x = 0; x < squarePixelsLength; x++) {

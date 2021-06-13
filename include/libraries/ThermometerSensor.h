@@ -19,7 +19,7 @@
 
 class ThermometerSensor : public Sensor {
 private:
-    bool _initialized = false;
+    bool ini = false;
     DHTesp dht = DHTesp();
 
 public:
@@ -32,7 +32,7 @@ public:
     }
 
     void test() override {
-        if (!_initialized)
+        if (!ini)
             begin();
         if (getTemperatureAndHumidity()) {
             Serial.println("Temperature Sensor connected and working!");
@@ -43,9 +43,9 @@ public:
     }
 
     void begin() override {
-        if (!_initialized) {
+        if (!ini) {
             dht.setup(PIN_DHT22TEMP, DHTesp::DHT11);
-            _initialized = true;
+            ini = true;
         }
     }
 

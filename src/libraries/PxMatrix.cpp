@@ -4,6 +4,7 @@
 
 #include "libraries/PxMatrix.h"
 
+#ifdef PX_MATRIX_SCREEN
 
 void PxMatrixScreen::setDrawTime(uint16_t drawtime) {
     _draw_time = drawtime;
@@ -13,7 +14,7 @@ uint16_t PxMatrixScreen::getDrawTime() const {
     return _draw_time;
 }
 
-void PxMatrixScreen::setFrequency(int frequency) {
+void PxMatrixScreen::setFrequency(const int &frequency) {
     spiClass.setFrequency(frequency);
 
 }
@@ -70,7 +71,7 @@ void PxMatrixScreen::drawPixels(const vector<Pixel> &vector) {
 }
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-inline uint16_t PxMatrixScreen::color565(uint8_t r, uint8_t g, uint8_t b) {
+inline uint16_t PxMatrixScreen::color565(const uint8_t &r, const uint8_t &g, const uint8_t &b) {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
@@ -134,30 +135,30 @@ inline void PxMatrixScreen::init(uint16_t width, uint16_t height, uint8_t MOSI, 
 
 #ifdef ESP32
 
-inline void PxMatrixScreen::fm612xWriteRegister(uint16_t reg_value, uint8_t reg_position) {
+inline void PxMatrixScreen::fm612xWriteRegister(const uint16_t &regValue, const uint8_t &regPosition) {
     spi_t *spibus = spiClass.bus();
     // reg_value = 0x1234;  debug
 
     for (int i = 0; i < 47; i++)
-        SPI_2BYTE(reg_value);
+        SPI_2BYTE(regValue);
 
     spiSimpleTransaction(spibus);
 
-    spibus->dev->mosi_dlen.usr_mosi_dbitlen = 16 - reg_position - 1;
+    spibus->dev->mosi_dlen.usr_mosi_dbitlen = 16 - regPosition - 1;
     spibus->dev->miso_dlen.usr_miso_dbitlen = 0;
-    spibus->dev->data_buf[0] = reg_value >> 8;
+    spibus->dev->data_buf[0] = regValue >> 8;
     spibus->dev->cmd.usr = 1;
     while (spibus->dev->cmd.usr);
 
     GPIO_REG_SET(1 << _LATCH_PIN);
 
-    spibus->dev->mosi_dlen.usr_mosi_dbitlen = (reg_position - 8) - 1;
-    spibus->dev->data_buf[0] = reg_value >> (reg_position - 8);
+    spibus->dev->mosi_dlen.usr_mosi_dbitlen = (regPosition - 8) - 1;
+    spibus->dev->data_buf[0] = regValue >> (regPosition - 8);
     spibus->dev->cmd.usr = 1;
     while (spibus->dev->cmd.usr);
     spiEndTransaction(spibus);
 
-    SPI_BYTE(reg_value & 0xff);
+    SPI_BYTE(regValue & 0xff);
 
     GPIO_REG_CLEAR(1 << _LATCH_PIN);
 
@@ -228,7 +229,7 @@ inline void PxMatrixScreen::writeRegister(uint16_t reg_value, uint8_t reg_positi
 inline void PxMatrixScreen::setDriverChip(driver_chips driver_chip) {
     _driver_chip = driver_chip;
 
-    if (driver_chip == FM6124 || driver_chip == FM6126A) {
+    if (driverChip == FM6124 || driverChip == FM6126A) {
 
         uint16_t b12a = 0b0111111111111111; //亮度: high
         b12a = 0b0111100011111111; //亮度: low
@@ -272,8 +273,8 @@ inline void PxMatrixScreen::setMuxPattern(mux_patterns mux_pattern) {
 }
 
 
-inline void PxMatrixScreen::setMuxDelay(uint8_t mux_delay) {
-    _mux_delay = mux_delay;
+inline void PxMatrixScreen::setMuxDelay(const uint8_t &muxDelay) {
+    _mux_delay = muxDelay;
 }
 
 inline void PxMatrixScreen::setScanPattern(scan_patterns scan_pattern) {
@@ -535,7 +536,7 @@ void PxMatrixScreen::begin() {
 }
 
 
-void PxMatrixScreen::spi_init() {
+void PxMatrixScreen::spiInit() {
     //spiClass = SPIClass(VSPI);
 #ifdef ESP32
     spiClass.begin(_SPI_CLK, -1, _SPI_MOSI, _SPI_SS);
@@ -573,7 +574,7 @@ void PxMatrixScreen::spi_init() {
 
 }
 
-void PxMatrixScreen::begin(uint8_t row_pattern) {
+void PxMatrixScreen::begin(const uint8_t &row_pattern) {
 
     _row_pattern = row_pattern;
     if (_row_pattern == 4)
@@ -586,7 +587,7 @@ void PxMatrixScreen::begin(uint8_t row_pattern) {
 
     pinMode(_REG_LATCH_PIN, OUTPUT);
 
-    spi_init();
+    spiInit();
 
     pinMode(_OE_PIN, OUTPUT);
     pinMode(_LATCH_PIN, OUTPUT);
@@ -608,14 +609,14 @@ void PxMatrixScreen::latch(uint16_t show_time, uint8_t value) {
             unsigned long start_time = micros();
             //while ((micros() - start_time) < show_time)
             //asm volatile (" nop ");
-            while ((micros() - start_time) < show_time)
+            while ((micros() - start_time) < showTime)
                     asm volatile("nop");
             digitalWrite(_OE_PIN, 1);
         }
     }
 }
 
-void PxMatrixScreen::latch(uint16_t show_time) {
+void PxMatrixScreen::latch(const uint16_t &show_time) {
 
     if (_driver_chip == SHIFT) {
         //digitalWrite(_OE_PIN,0); // <<< remove this
@@ -673,10 +674,8 @@ void PxMatrixScreen::set_mux(uint8_t value) {
 void PxMatrixScreen::display(uint16_t show_time) {
     if (show_time < 10)
         show_time = 10;
-    unsigned long start_time = 0;
 
     uint8_t (*bufferp)[PxMATRIX_COLOR_DEPTH][buffer_size] = &PxMATRIX_buffer;
-    unsigned long nanoStart = micros();
 
     for (uint8_t i = 0; i < _row_pattern; i++) {
         // yield();
@@ -769,3 +768,4 @@ void PxMatrixScreen::setPinState(free_pin pin, uint8_t state) {
 
 }
 
+#endif

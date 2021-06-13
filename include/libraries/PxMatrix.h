@@ -3,7 +3,7 @@ This is a library for Chinese LED matrix displays
 
 Written by Dominic Buchstaller.
 Modified by Z-Grate
-BSD license, check license.txt for more information
+BSD license
 *********************************************************************/
 
 
@@ -47,17 +47,9 @@ BSD license, check license.txt for more information
 #endif
 
 
-#ifdef ESP8266
-#define GPIO_REG_SET(val) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS,val)
-#define GPIO_REG_CLEAR(val) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS,val)
-#endif
 #ifdef ESP32
 #define GPIO_REG_SET(val) GPIO.out_w1ts = val
 #define GPIO_REG_CLEAR(val) GPIO.out_w1tc = val
-#endif
-#ifdef __AVR__
-#define GPIO_REG_SET(val) (val < 8) ? PORTD |= _BV(val) : PORTB |= _BV(val-8)
-#define GPIO_REG_CLEAR(val) (val < 8) ? PORTD &= ~_BV(val) : PORTD &= ~_BV(val-8)
 #endif
 
 #ifdef ESP32
@@ -73,12 +65,6 @@ struct spi_struct_t {
     uint8_t num;
 };
 #endif
-
-// HW spiClass PINS
-#define SPI_BUS_CLK 18
-#define SPI_BUS_MOSI 23
-#define SPI_BUS_SS 5
-#define PX_REG 5
 
 // Either the panel handles the multiplexing and we feed BINARY to A-E pins
 // or we handle the multiplexing and activate one of A-D pins (STRAIGHT)
@@ -118,10 +104,10 @@ using namespace std;
 class PxMatrixScreen : public Adafruit_GFX, public Screen {
 public:
 
-    PxMatrixScreen(uint16_t width, uint16_t height, uint8_t MOSI, uint8_t CLK, uint8_t LATCH, uint8_t OE,
-                   uint8_t REG_LATCH);
+    PxMatrixScreen(const uint16_t &width, const uint16_t height, const uint8_t &mosi, const uint8_t &clk, const uint8_t &latch, const uint8_t &oe,
+                   const uint8_t &regLatch);
 
-    void begin(uint8_t row_pattern);
+    void begin(const uint8_t &row_pattern);
 
     void begin() override;
 
@@ -131,70 +117,63 @@ public:
     void display(uint16_t show_time);
 
     void display() {
-        display(_draw_time);
+        display(drawTime);
     }
 
     // Draw pixels
-    inline void drawPixelRGB565(int16_t x, int16_t y, uint16_t color);
+    void drawPixelRGB565(const int16_t &x, const int16_t &y, const uint16_t &color);
 
-    inline void drawPixel(int16_t x, int16_t y, uint16_t color) override;
+    void drawPixel(int16_t x, int16_t y, uint16_t color) override;
 
-    inline void drawPixelRGB888(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b);
-
-    // Does nothing for now (always returns 0)
-    uint8_t getPixel(int8_t x, int8_t y);
+    void drawPixelRGB888(const int16_t &x, const int16_t &y, const uint8_t &r, const uint8_t &g, const uint8_t &b);
 
     // Converts RGB888 to RGB565
-    uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
-
-    // Helpful for debugging (place in display update loop)
-    //inline void displayTestPattern(uint16_t showtime);
-
-    // Helpful for debugging (place in display update loop)
-    //inline void displayTestPixel(uint16_t show_time);
+    uint16_t color565(const uint8_t &r, const uint8_t &g, const uint8_t &b);
 
     // FLush the buffer of the display
-    inline void flushDisplay();
+    void flushDisplay();
 
     // Rotate display
-    inline void setRotate(bool rotate);
+    void setRotate(const bool &rotate);
 
     // Flip display
-    inline void setFlip(bool flip);
+    void setFlip(const bool &flip);
 
     // Helps to reduce display update latency on larger displays
-    inline void setFastUpdate(bool fast_update);
-
-    // When using double buffering, this displays the draw buffer
-    inline void showBuffer();
+    void setFastUpdate(const bool &fast_update);
 
     // Control the minimum color values that result in an active pixel
-    inline void setColorOffset(uint8_t r, uint8_t g, uint8_t b);
+    void setColorOffset(uint8_t r, uint8_t g, uint8_t b);
 
-    // Set the multiplex implemention {BINARY, STRAIGHT} (default is BINARY)
-    inline void setMuxPattern(mux_patterns mux_pattern);
 
     // Set the time in microseconds that we pause after selecting each mux channel
     // (May help if some rows are missing / the mux chip is too slow)
-    inline void setMuxDelay(uint8_t mux_delay);
+    void setMuxDelay(const uint8_t &muxDelay);
 
 //  inline void setRegister(uint8_t number);
 
     // Set the multiplex pattern {LINE, ZIGZAG, ZAGGIZ, WZAGZIG, VZAG} (default is LINE)
-    inline void setScanPattern(scan_patterns scan_pattern);
+    void setScanPattern(const scan_patterns &scanPattern);
 
     // Set the number of panels that make up the display area width (default is 1)
-    inline void setPanelsWidth(uint8_t panels);
+    void setPanelsWidth(const uint8_t &panels);
 
-    // Set the brightness of the panels (default is 255)
-    void setBrightness(const uint8_t &brightness) override;
+    // Set the b of the panels (default is 255)
+    void setBrightness(const uint8_t &b) override {
+        this->brightness = b;
+    }
 
-    inline void setDrawTime(uint16_t drawtime);
+
+    inline void setDrawTime(const uint16_t &drawtime);
 
     // Set driver chip type
-    inline void setDriverChip(driver_chips driver_chip);
-
-    inline void setPinState(free_pin pin, uint8_t state);
+    inline void setDriverChip(const driver_chips &driverChip);
+    /**
+     * Set state pins of shift register
+     * @param pin to set
+     * @param state new state of the pin - 1 - enabled, 0 - disabled
+     */
+    void setPinState(const free_pin &pin, const bool &state);
 
 // Some standard colors
     uint16_t red = color565(255, 0, 0);
@@ -210,7 +189,7 @@ public:
 
     inline uint16_t getDrawTime() const;
 
-    void setFrequency(int frequency);
+    void setFrequency(const int &frequency);
 
     void test();
 
@@ -220,6 +199,8 @@ public:
 
     void drawPixels(const vector<Pixel> &vector) override;
 
+    hw_timer_t * timer = NULL;
+    portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 private:
 //buffersize = (32 * 128)*3/8
     SPIClass spiClass = SPIClass(PxMATRIX_SPICLASS);
@@ -232,107 +213,90 @@ private:
 
     bool writing = false;
     // GPIO pins
-    uint8_t _LATCH_PIN;
-    uint8_t _OE_PIN;
-    uint8_t _REG_LATCH_PIN = PX_REG;
+    uint8_t latchPin = PIN_OUTPUT_PX_STROBO;
+    uint8_t oePin = PIN_OUTPUT_PX_OE;
+    uint8_t regLatchPin = PIN_OUTPUT_PX_REGLATCH;
 
 
     // spiClass pins
-    uint8_t _SPI_CLK = SPI_BUS_CLK;
-    uint8_t _SPI_MOSI = SPI_BUS_MOSI;
-    uint8_t _SPI_SS = SPI_BUS_SS;
+    uint8_t spiClk = PIN_OUTPUT_PX_CLK;
+    uint8_t spiMosi = PIN_OUTPUT_PX_MOSI;
+    uint8_t spiSs = PIN_OUTPUT_PX_STROBO;
 
-    uint16_t _draw_time = PxMATRIX_SHOWTIME;
+    uint16_t drawTime = PxMATRIX_SHOWTIME;
 
 
-    uint8_t _other_pins_state = B00000000;
+    uint8_t otherPinsState = B00000000;
 
     uint8_t _width;
     uint8_t _height;
-    uint8_t _panels_width;
-    uint8_t _rows_per_buffer;
-    uint8_t _row_sets_per_buffer;
-    uint8_t _panel_width_bytes;
+    uint8_t panelsWidth;
+    uint8_t rowsPerBuffer;
+    uint8_t rowSetsPerBuffer;
+    uint8_t panelWidthBytes;
 
-    bool taskStarted = false;
 
     // Color offset
-    uint8_t _color_R_offset;
-    uint8_t _color_G_offset;
-    uint8_t _color_B_offset;
+    uint8_t colorROffset;
+    uint8_t colorGOffset;
+    uint8_t colorBOffset;
 
     // Panel Brightness
-    uint8_t _brightness = 255;
+    uint8_t brightness = 255;
 
     // Color pattern that is pushed to the display
-    uint8_t _display_color;
+    uint8_t displayColor;
 
     // Holds some pre-computed values for faster pixel drawing
-    uint32_t _row_offset[PxMATRIX_HEIGHT];
+    uint32_t rowOffset[PxMATRIX_HEIGHT];
 
     // Holds the display row pattern type
-    uint8_t _row_pattern;
+    uint8_t rowPattern;
 
     // Number of bytes in one color
-    uint8_t _pattern_color_bytes;
+    uint8_t patternColorBytes;
 
     // Total number of bytes that is pushed to the display at a time
-    // 3 * _pattern_color_bytes
-    uint16_t _send_buffer_size;
+    // 3 * patternColorBytes
+    uint16_t sendBufferSize;
 
     AnimationMode animationMode = AnimationMode::ANIMATION_FROM_FILE;
 
-    // This is for double buffering
-    bool _active_buffer;
 
     // Hols configuration
-    bool _rotate;
-    bool _flip;
-    bool _fast_update = true;
-
-    // Holds multiplex pattern
-    mux_patterns _mux_pattern;
+    bool isRotated;
+    bool isFlipped;
+    bool fastUpdate = true;
 
     //Delay of register of muxes
     uint8_t _mux_delay;
 
-    //Task that handles matrix display refresh
-    hw_timer_t *timer = nullptr;
-
-
     // Holds the scan pattern
-    scan_patterns _scan_pattern;
+    scan_patterns scanPattern;
 
     // Holds the used driver chip
-    driver_chips _driver_chip;
+    driver_chips driverChip;
 
     // Used for test pattern
-    uint16_t _test_pixel_counter;
-    uint16_t _test_line_counter;
-    unsigned long _test_last_call;
-    bool _initialized = false;
+    uint16_t testPixelCounter;
+    uint16_t testLineCounter;
+    unsigned long testLastCall;
+    bool initialized = false;
 
     // Generic function that draw one pixel
-    inline void fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b, bool selected_buffer);
-
-    // Init code common to both constructors
-    inline void
-    init(uint16_t width, uint16_t height, uint8_t MOSI, uint8_t CLK, uint8_t LATCH, uint8_t OE, uint8_t ABCDE_LATCH);
+    void fillMatrixBuffer(int16_t x, const int16_t &y, const uint8_t &r, const uint8_t &g, const uint8_t &b);
 
     // Light up LEDs and hold for show_time microseconds
-    inline void latch(uint16_t show_time);
+    void latch(const uint16_t &show_time);
 
-    inline void latch(uint16_t show_time, uint8_t value);
+    void latch(const uint16_t &showTime, const uint8_t &value);
 
     // Set row multiplexer
-    inline void set_mux(uint8_t value);
+    void setMux(uint8_t value);
 
-    inline void spi_init();
+    void spiInit();
 
-// Write configuration register in some driver chips
-    inline void writeRegister(uint16_t reg_value, uint8_t reg_position);
-
-    inline void fm612xWriteRegister(uint16_t reg_value, uint8_t reg_position);
+    void fm612xWriteRegister(const uint16_t &regValue, const uint8_t &regPosition);
 
     void fullBrightness();
 
@@ -397,24 +361,14 @@ class CyclicRGBBuffer {
 
 
 
-
-
 //void writeToRegisterPin(uint8_t pin, uint8_t state) {
 //    //TODO
 //    PxMatrixControlInstance.setPinState(static_cast<free_pin>(pin), state);
 //}
 
 
-//hw_timer_t * timer = NULL;
-//portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
-//void IRAM_ATTR display_updater() {
-//    // Increment the counter and set the time of ISR
-//    portENTER_CRITICAL_ISR(&timerMux);
-//    PxMatrixControlInstance.display(PxMatrixControlInstance.getDrawTime());
-//    //   display.displayTestPattern(70);
-//    portEXIT_CRITICAL_ISR(&timerMux);
-//}
+
 
 //void IRAM_ATTR old_display_updater(void * display){
 //    for(;;)
@@ -433,14 +387,9 @@ class CyclicRGBBuffer {
 //
 //TaskHandle_t handle;
 //
-//void PxMatrixScreen::startDisplayThread() {
-//    if (!_initialized)
-//        begin();
-//    timer = timerBegin(0, 80, true);
-//    timerAttachInterrupt(timer, &display_updater, true);
-//    timerAlarmWrite(timer, PxMATRIX_INTERRUPT_TIMER, true);
-//    timerAlarmEnable(timer);
-//
+
+
+
 //
 //
 ////    xTaskCreatePinnedToCore(

@@ -9,8 +9,8 @@
 #include <cstring>
 #include "control/Definitions.h"
 
-#define Z_CONFIGURATION
-//#define STANDARD_MAX_CONFIGURATION
+//#define Z_CONFIGURATION
+#define STANDARD_MAX_CONFIGURATION
 
 
 //TEST MODE - CONNECT ESP THROUGH SERIAL AND CHECK IF EVERYTHING WORKS
@@ -44,7 +44,7 @@ String getCapabilitiesJson();
 
 void constructCapabilitiesList();
 
-void writeToRegisterPin(uint8_t pin, uint8_t state);
+void writeToRegisterPin(const uint8_t &pin, const uint8_t &state);
 
 void debugPrint(const String &text);
 

@@ -11,23 +11,23 @@
 
 class CurrentVoltageSensor : public Sensor {
 
-    INA219 CurrentControlCenter = INA219();
+    INA219 ina219 = INA219();
 public:
     String requestData(const String &data) override {
-        return String(CurrentControlCenter.readBusVoltage()) + "?" + String(CurrentControlCenter.readShuntCurrent());
+        return String(ina219.readBusVoltage()) + "?" + String(ina219.readShuntCurrent());
     }
 
     void test() override {
-        Serial.println(CurrentControlCenter.readBusVoltage());
-        Serial.println(CurrentControlCenter.readShuntCurrent());
+        Serial.println(ina219.readBusVoltage());
+        Serial.println(ina219.readShuntCurrent());
 
     }
 
     void begin() override {
-        CurrentControlCenter.begin();
-        CurrentControlCenter.configure(INA219_RANGE_32V, INA219_GAIN_320MV, INA219_BUS_RES_12BIT,
-                                       INA219_SHUNT_RES_12BIT_1S);
-        CurrentControlCenter.calibrate(CURRENT_VOLTAGE_SHUNT_OHM, CURRONT_VOLTAGE_SHUNT_VOLTAGE);
+        ina219.begin();
+        ina219.configure(INA219_RANGE_32V, INA219_GAIN_320MV, INA219_BUS_RES_12BIT,
+                         INA219_SHUNT_RES_12BIT_1S);
+        ina219.calibrate(CURRENT_VOLTAGE_SHUNT_OHM, CURRONT_VOLTAGE_SHUNT_VOLTAGE);
 
     }
 

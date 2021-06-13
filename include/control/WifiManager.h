@@ -20,7 +20,7 @@ void wifiLoop(void *pvParameters);
 
 class WifiManager {
 
-    WiFiServer server = WiFiServer(WIFI_PORT);
+    WiFiServer server = WiFiServer(wifiPort);
     TaskHandle_t wifiTask{};
     WiFiClient client;
 

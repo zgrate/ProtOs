@@ -10,5 +10,4 @@ void setup() {
 void loop() {
     MainSystem::getMainSystem().loop();
     yield();
-
 }

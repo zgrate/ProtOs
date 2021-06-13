@@ -19,7 +19,7 @@ private:
     uint32_t initTimer = 0;
     uint8_t continuousMode = 0;
 
-    void setPinVoltage(QC3Pins pin, int16_t milliVolts) {
+    void setPinVoltage(const QC3Pins &pin, const int16_t &milliVolts) {
 
         if (pin != dp && pin != dn) return;
 
@@ -71,7 +71,7 @@ private:
 public:
     QC3ClientClass() {}
 
-    uint8_t begin(uint8_t QC2Mode = 0, uint8_t blocking = 1) {
+    uint8_t begin(const uint8_t &QC2Mode = 0, const uint8_t &blocking = 1) {
         if (pinsInit) {
             if (initTimer == 0) {
                 setPinVoltage(dp, 600);
@@ -120,7 +120,7 @@ public:
         qcInit = 0;
     }
 
-    uint16_t setMillivolts(uint16_t millivolts) {
+    uint16_t setMillivolts(const uint16_t &millivolts) {
         if (qcInit && millivolts <= 12000 && millivolts >= 3600) {
             uint16_t normalizedMillivolts = millivolts / 100;
 
@@ -199,12 +199,12 @@ private:
     QC3ClientClass qc3ClientClass;
     uint8_t currentFanSpeedPercentage = 0;
     int millisIncrement = (QC_MAX_VOLTAGE - QC_MIN_VOLTAGE) / 100;
-    bool _initialized = false;
+    bool initialized = false;
 public:
 
     void begin() override {
         qc3ClientClass.begin();
-        _initialized = true;
+        initialized = true;
     }
 
     String control(const String &data) override {
@@ -222,7 +222,7 @@ public:
     }
 
     void test() override {
-        if (!_initialized)
+        if (!initialized)
             begin();
         control("60");
         Serial.print("Fan set to 60%. Check if voltage is ");
