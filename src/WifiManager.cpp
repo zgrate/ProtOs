@@ -4,8 +4,8 @@
 
 #include "control/WifiManager.h"
 #ifdef WIFI_SUPPORT
-void wifiLoop(void *pvParameters) {
-    auto *wifi = static_cast<WifiManager *>(pvParameters);
+void wifiLoop(void *wifiManagerPointer) {
+    auto *wifi = static_cast<WifiManager *>(wifiManagerPointer);
     while (isRunning) {
         wifi->loop();
         vTaskDelay(10);

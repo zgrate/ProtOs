@@ -214,6 +214,9 @@ public:
      */
     void mainDisplayLoop();
 
+    /**
+     * This section is dependant on configuration in files
+     */
 #ifdef MAX_MATRIX_SCREEN
 private:
     Max7219Screen max7219Screen;
@@ -364,15 +367,38 @@ public:
 
 namespace main_ns {
 
-
+/**
+ * Draws on the screen, while the screen is in LiveAnimation mode
+ * @param screenId ID of the screen, based on configuration file
+ * @param vector List of pixels to draw
+ */
     void liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector);
 
+    /**
+     * Clears the screen (sets all pixels to BLACK)
+     * @param screenId ID of the screen, based on configuration file
+     */
     void clearDisplay(const uint8_t &screenId);
 
+    /**
+     * Reads the data from the given sensor
+     * @param sensorId ID of the sensor, based on configuration file
+     * @param type pointer to the variable holding the type of the sensor
+     * @return value read from the sensor, in a format defined by the type
+     */
     String readSensor(const uint8_t &sensorId, uint8_t *type);
 
+    /**
+     * Sends the control signal to the device, controlling something
+     * @param controlId Id of the control, defined in configuration
+     * @param stringValue string value of a control value, for example target speed
+     */
     void control(const uint8_t &controlId, const String &stringValue);
 
+    /**
+     * Forwards the packet to the Network Thread and sends it
+     * @param packet Packet to send
+     */
     void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
 }
 

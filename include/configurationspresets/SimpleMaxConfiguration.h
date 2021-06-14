@@ -24,7 +24,7 @@
 //SD SUPPORT
 //#define SD_SUPPORT
 //WIFI CONNECTION
-//#define WIFI_SUPPORT
+#define WIFI_SUPPORT
 //BLUETOOTH CONNECTION
 //#define BLUETOOTH_SUPPORT
 //TIME
@@ -180,17 +180,29 @@ const int BLUETOOTH_CONNECTION_PIN = 11991;
 
 #ifdef WIFI_SUPPORT
 //WIFI
-//Default SSID of WIFI network
+/**
+ * SSID of WIFI network, configured
+ */
 extern String wifiSsid;
 
-//Default Password of WIFI network
+/**
+ * Password of wifi network
+ */
 extern String wifiPassword;
 
-//Wifi hostname - It will always start with 'VISS_'
-extern String wifiHostname;
-//WIFI PORT
-extern int WIFI_PORT;
+/**
+ * Wifi hostname - It will always start with 'VISS_'
+ */
 
+extern String wifiHostname;
+/**
+ * Port for the server to listen on wifi
+ */
+extern int wifiPort;
+/**
+ * Current IPAddress, used with wifi control
+ */
+extern String ipAddress;
 #endif
 //Define if you want debug output to be redirected to Serial
 //#define SERIAL_DEBUG

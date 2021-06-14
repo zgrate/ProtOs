@@ -28,7 +28,7 @@ void debugPrint(const String &text) {
 
 }
 
-void debugPrint(const int &text) {
+void debugPrint(const long &number) {
 }
 
 #endif

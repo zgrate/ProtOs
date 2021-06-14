@@ -15,9 +15,15 @@
 #include "control/Packets.h"
 #include "control/ControlFunctions.h"
 
-void wifiLoop(void *pvParameters);
+/**
+ * Main wifi loop, used in thread
+ * @param wifiManagerPointer WIFI Manager pointer
+ */
+void wifiLoop(void *wifiManagerPointer);
 
-
+/**
+ * Main class for connecting, processing and sending packets using WIFI
+ */
 class WifiManager {
 
     WiFiServer server = WiFiServer(wifiPort);
@@ -25,6 +31,9 @@ class WifiManager {
     WiFiClient client;
 
 public:
+    /**
+     * Main WIFI Loop, should be executed in thread
+     */
     void loop() {
         client = server.available();   // listen for incoming clients
         if (client) {                             // if you get a client,
@@ -47,6 +56,9 @@ public:
         }
     }
 
+    /**
+     * Starts WIFI - connects to the network and receivers IP address
+     */
     void begin() {
         Serial.print("Connecting to ");
         Serial.println(wifiSsid);
@@ -76,6 +88,11 @@ public:
 
     }
 
+    /**
+     * Sends the packet to the connected client
+     * @param packetToSend Packet to send
+     * @return
+     */
     bool sendPacket(const shared_ptr<ClientBoundPacket> &packetToSend) {
         if (!client.connected()) {
             return false;

@@ -25,7 +25,7 @@ uint64_t readULongLong(Stream &s);
 
 String readString(Stream &s);
 
-
+//TODO: I DONT NEED FROM HERE, THIS IS C++, YOU CAN JUST INCREMENT STUFF HERE
 uint16_t readShort(const uint8_t *array, int from = 0);
 
 uint32_t readULong(const uint8_t *array, int from = 0);
@@ -42,13 +42,24 @@ void writeULongLong(const uint64_t &number, uint8_t *bytes, const uint16_t &from
 
 void writeString(const String &string, uint8_t *bytes, const uint16_t &from = 0);
 
-
+/**
+ * Pipeline, shows the source of the packet, used for later forwarding the packet to correct target
+ */
 enum class PacketPipeline {
     WIFI, BLUETOOTH, SERIAL_SOURCE, OTHER, UNKNOWN
 };
 
+/**
+ * Caluclates CRC8 of the given buffer
+ * @param addr Address of the buffer
+ * @param len Length of the buffer
+ * @return 8-bit crc8 chechsum
+ */
 uint8_t crc8(const uint8_t *addr, uint16_t len);
 
+/**
+ * Basepacket, used as a basis for other packets
+ */
 class BasePacket {
 protected:
     uint8_t packetId;
@@ -70,29 +81,54 @@ public:
     }
 };
 
-class NullPacket : public BasePacket {
-public:
-    NullPacket() : BasePacket(0, PacketPipeline::UNKNOWN) {}
-};
-
+/**
+ * Packet with a client as a target (ProtApp is a target)
+ */
 class ClientBoundPacket : public BasePacket {
 
 public:
+    /**
+     * Generates the bytes from the packet
+     * @param length Pointer to the variable where length will be saved
+     * @return Pointer to the buffer. It should be deleted after usage, as it is dynamically allocated
+     */
     virtual uint8_t *getPacket(uint16_t *length) = 0;
 
+    /**
+     * Constructor for the packet
+     * @param i ID of the packet
+     * @param pipeline Pipeline of the packet
+     */
     explicit ClientBoundPacket(int i, PacketPipeline pipeline) : BasePacket(i, pipeline) {};
 };
 
+/**
+ * Packet with a server as a target (ProtOs is a target)
+ */
 class ServerBoundPacket : public BasePacket {
 
 public:
+    /**
+     * Constructor for the packet
+     * @param i ID of the packet
+     * @param pipeline Pipeline of the packet
+     */
     explicit ServerBoundPacket(int i, PacketPipeline pipeline) : BasePacket(i, pipeline) {};
 
-    virtual void readPacket(const uint8_t *array, const uint16_t &length) = 0;
+    /**
+     * Reads the packet from the given buffer and length and constucts the packet
+     * @param buffer Buffer
+     * @param length Length of the buffer
+     */
+    virtual void readPacket(const uint8_t *buffer, const uint16_t &length) = 0;
 };
 
 
-//SERVER BOUNDS
+/**
+ * SERVER BOUND PACKETS
+ *
+ */
+
 class S03Handshake : public ServerBoundPacket {
 
 private:
@@ -296,7 +332,9 @@ public :
 };
 
 
-//ClientBounds
+/**
+ * CLIENT BOUND PACKETS
+ */
 class C03Handshake : public ClientBoundPacket {
 
     String toSend;
@@ -428,29 +466,12 @@ public:
 
 };
 
-//CLASS FACTORY
-
-//struct IFactory { virtual std::shared_ptr<ServerBoundPacket*> create() = 0; };
-
-//template< typename Type > struct Factory{
-//
-//    Factory(){
-//
-//    }
-//    std::shared_ptr<Type*> create() {
-//        return std::shared_ptr<Type*>(new Type());
-//    }
-//
-//
-//};
-
-//std::map<int, Factory<ServerBoundPacket *>*> allPackets { {9, new Factory<S09DrawUpdate>()} };
-
-//static shared_ptr<BasePacket *> getPacket()
-//{
-//    return shared_ptr<>(new S09DrawUpdate());
-//}
-
+/**
+ * Method used to contruct the packet from the steam of data
+ * @param s Stream of data to read from
+ * @param pipeline Pipeline the packet is currently in
+ * @return the pointer to the constructed and read packet
+ */
 std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pipeline);
 
 

@@ -7,6 +7,10 @@
 
 #include "Packets.h"
 
+/**
+ * Endpoint for processing incoming packets
+ * @param data Packet to process
+ */
 void processIncomingPacket(const std::shared_ptr<ServerBoundPacket> &data);
 
 void processIncomingS03(const shared_ptr<S03Handshake> &pointer);
