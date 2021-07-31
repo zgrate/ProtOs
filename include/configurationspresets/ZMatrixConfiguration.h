@@ -16,7 +16,7 @@
 #define OLED_SUPPORT 2
 #define PX_BRIGHTNESS_CONTROL 3
 #define MAX_BRIGTHNESS_CONTROL 4
-//#define WS_BRIGTHNESS_CONTROL
+#define WS_BRIGTHNESS_CONTROL
 
 //SENSORS
 #define THERMOMETER_HYDROMETER_SENSOR 1
@@ -32,7 +32,7 @@
 //WIFI CONNECTION
 #define WIFI_SUPPORT
 //BLUETOOTH CONNECTION
-#define BLUETOOTH_SUPPORT
+//#define BLUETOOTH_SUPPORT
 //TIME
 #define TIME_SUPPORT
 
@@ -101,10 +101,10 @@
 //Defines SPIClass for PxMatrices
 #define PxMATRIX_SPICLASS HSPI
 
-// Defines the buffer height / the height of the matrix
+// Defines the maxBuffer height / the height of the matrix
 #define PxMATRIX_HEIGHT 32
 
-// Defines the buffer width / the maximum width of the matrix
+// Defines the maxBuffer width / the maximum width of the matrix
 #define PxMATRIX_WIDTH 128
 //Number of matrices in the row
 #define PxMatrix_WIDTH_NUMBER 2
@@ -164,7 +164,7 @@
 #define MAX_STARTUP_REFRESH 10000
 
 //Performs test of all leds, turning them on at max power
-//]#define MAX_FULLPOWER_TEST
+//#define MAX_FULLPOWER_TEST
 #endif
 
 #ifdef WS_MATRIX_SCREEN

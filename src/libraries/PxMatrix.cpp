@@ -1,83 +1,18 @@
 //
-// Created by dzing on 08/06/2021.
+// Created by dzing on 28/06/2021.
 //
 
 #include "libraries/PxMatrix.h"
 
-#ifdef PX_MATRIX_SCREEN
-
-void PxMatrixScreen::setDrawTime(uint16_t drawtime) {
-    _draw_time = drawtime;
-}
-
-uint16_t PxMatrixScreen::getDrawTime() const {
-    return _draw_time;
-}
-
-void PxMatrixScreen::setFrequency(const int &frequency) {
-    spiClass.setFrequency(frequency);
-
-}
-
-void PxMatrixScreen::test() {
-
-    if (!_initialized) {
-        begin();
-        //startDisplayThread();
-    }
-#ifdef PxMATRIX_FULLBRIGHTNESS
-    setBrightness(255);
-    setFastUpdate(true);
-    fullBrightness();
-    return;
-#endif
-    clear();
-    setCursor(0, 0);
-    setTextColor(white);
-    print("ABCDEFGHIJKLMNOPRSTUWXYZ");
-
-    for (int i = 2; i < 8; i++) {
-
-        writeFillRect(i * 10, 8, 10, 7, colors[i % 8]);
-    }
-    for (int i = 2; i < 8; i++) {
-
-        writeFillRect(i * 10 + 60, 8, 10, 7, colors[i % 8]);
-    }
-
-    writeFillRect(0, 16, 150, 16, white);
-    Serial.println("PXMatrix initialized! Check if TEST PATTERN is displayed without errors");
-}
-
-void PxMatrixScreen::fullBrightness() {
-    if (!_initialized) {
-        begin();
-    }
-    fillRect(0, 0, _width, _height, white);
-}
-
-void PxMatrixScreen::writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) {
-    memcpy(PxMATRIX_buffer[0], buffer, bufferLength);
-}
-
-uint8_t *PxMatrixScreen::getBufferAddress() {
-    return PxMATRIX_buffer[0];
-}
-
-void PxMatrixScreen::drawPixels(const vector<Pixel> &vector) {
-    for (auto p : vector) {
-        this->drawPixel(p.x, p.y, color565(p.r, p.b, p.g)); //TODO : IT SHOULD NOT BE LIKE THIS
-    }
-}
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-inline uint16_t PxMatrixScreen::color565(const uint8_t &r, const uint8_t &g, const uint8_t &b) {
+uint16_t PxMatrixScreen::color565(uint8_t r, uint8_t g, uint8_t b) {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 // Init code common to both constructors
-inline void PxMatrixScreen::init(uint16_t width, uint16_t height, uint8_t MOSI, uint8_t CLK, uint8_t LATCH, uint8_t OE,
-                                 uint8_t ABCD_LATCH) {
+void PxMatrixScreen::init(uint16_t width, uint16_t height, uint8_t MOSI, uint8_t CLK, uint8_t LATCH, uint8_t OE,
+                          uint8_t ABCD_LATCH) {
     _SPI_MOSI = MOSI;
     _SPI_CLK = CLK;
     _LATCH_PIN = LATCH;
@@ -127,7 +62,7 @@ inline void PxMatrixScreen::init(uint16_t width, uint16_t height, uint8_t MOSI, 
     _mux_delay = 0;
 
     // setPanelsWidth(PxMatrix_WIDTH_NUMBER);
-    clear();
+    clearDisplay(0);
 #ifdef PxMATRIX_double_buffer
     clearDisplay(1);
 #endif
@@ -135,37 +70,37 @@ inline void PxMatrixScreen::init(uint16_t width, uint16_t height, uint8_t MOSI, 
 
 #ifdef ESP32
 
-inline void PxMatrixScreen::fm612xWriteRegister(const uint16_t &regValue, const uint8_t &regPosition) {
+void PxMatrixScreen::fm612xWriteRegister(uint16_t reg_value, uint8_t reg_position) {
     spi_t *spibus = spiClass.bus();
     // reg_value = 0x1234;  debug
 
     for (int i = 0; i < 47; i++)
-        SPI_2BYTE(regValue);
+        SPI_2BYTE(reg_value);
 
     spiSimpleTransaction(spibus);
 
-    spibus->dev->mosi_dlen.usr_mosi_dbitlen = 16 - regPosition - 1;
+    spibus->dev->mosi_dlen.usr_mosi_dbitlen = 16 - reg_position - 1;
     spibus->dev->miso_dlen.usr_miso_dbitlen = 0;
-    spibus->dev->data_buf[0] = regValue >> 8;
+    spibus->dev->data_buf[0] = reg_value >> 8;
     spibus->dev->cmd.usr = 1;
     while (spibus->dev->cmd.usr);
 
     GPIO_REG_SET(1 << _LATCH_PIN);
 
-    spibus->dev->mosi_dlen.usr_mosi_dbitlen = (regPosition - 8) - 1;
-    spibus->dev->data_buf[0] = regValue >> (regPosition - 8);
+    spibus->dev->mosi_dlen.usr_mosi_dbitlen = (reg_position - 8) - 1;
+    spibus->dev->data_buf[0] = reg_value >> (reg_position - 8);
     spibus->dev->cmd.usr = 1;
     while (spibus->dev->cmd.usr);
     spiEndTransaction(spibus);
 
-    SPI_BYTE(regValue & 0xff);
+    SPI_BYTE(reg_value & 0xff);
 
     GPIO_REG_CLEAR(1 << _LATCH_PIN);
 
 }
 
 #else
-inline void PxMatrixScreen::writeRegister(uint16_t reg_value, uint8_t reg_position)
+void PxMatrixScreen::writeRegister(uint16_t reg_value, uint8_t reg_position)
 {
   if (_driver_chip == FM6124 || _driver_chip == FM6126A){
 
@@ -226,10 +161,10 @@ inline void PxMatrixScreen::writeRegister(uint16_t reg_value, uint8_t reg_positi
 }
 #endif
 
-inline void PxMatrixScreen::setDriverChip(driver_chips driver_chip) {
+void PxMatrixScreen::setDriverChip(driver_chips driver_chip) {
     _driver_chip = driver_chip;
 
-    if (driverChip == FM6124 || driverChip == FM6126A) {
+    if (driver_chip == FM6124 || driver_chip == FM6126A) {
 
         uint16_t b12a = 0b0111111111111111; //亮度: high
         b12a = 0b0111100011111111; //亮度: low
@@ -260,7 +195,7 @@ inline void PxMatrixScreen::setDriverChip(driver_chips driver_chip) {
     }
 }
 
-inline void PxMatrixScreen::setMuxPattern(mux_patterns mux_pattern) {
+void PxMatrixScreen::setMuxPattern(mux_patterns mux_pattern) {
     _mux_pattern = mux_pattern;
 
     // We handle the multiplexing in the library and activate one of for
@@ -273,32 +208,32 @@ inline void PxMatrixScreen::setMuxPattern(mux_patterns mux_pattern) {
 }
 
 
-inline void PxMatrixScreen::setMuxDelay(const uint8_t &muxDelay) {
-    _mux_delay = muxDelay;
+void PxMatrixScreen::setMuxDelay(uint8_t mux_delay) {
+    _mux_delay = mux_delay;
 }
 
-inline void PxMatrixScreen::setScanPattern(scan_patterns scan_pattern) {
+void PxMatrixScreen::setScanPattern(scan_patterns scan_pattern) {
     _scan_pattern = scan_pattern;
 }
 
-inline void PxMatrixScreen::setPanelsWidth(uint8_t panels) {
+void PxMatrixScreen::setPanelsWidth(uint8_t panels) {
     _panels_width = panels;
     _panel_width_bytes = (_width / _panels_width) / 8;
 }
 
-inline void PxMatrixScreen::setRotate(bool rotate) {
+void PxMatrixScreen::setRotate(bool rotate) {
     _rotate = rotate;
 }
 
-inline void PxMatrixScreen::setFlip(bool flip) {
+void PxMatrixScreen::setFlip(bool flip) {
     _flip = flip;
 }
 
-inline void PxMatrixScreen::setFastUpdate(bool fast_update) {
+void PxMatrixScreen::setFastUpdate(bool fast_update) {
     _fast_update = fast_update;
 }
 
-void PxMatrixScreen::setBrightness(const uint8_t &brightness) {
+void PxMatrixScreen::setBrightness(uint8_t brightness) {
     _brightness = brightness;
 }
 
@@ -309,15 +244,15 @@ PxMatrixScreen::PxMatrixScreen(uint16_t width, uint16_t height, uint8_t MOSI, ui
     init(width, height, MOSI, CLK, LATCH, OE, ABCDE_LATCH);
 }
 
-inline void PxMatrixScreen::drawPixel(int16_t x, int16_t y, uint16_t color) {
+void PxMatrixScreen::drawPixel(int16_t x, int16_t y, uint16_t color) {
     drawPixelRGB565(x, y, color);
 }
 
-inline void PxMatrixScreen::showBuffer() {
+void PxMatrixScreen::showBuffer() {
     _active_buffer = !_active_buffer;
 }
 
-inline void PxMatrixScreen::setColorOffset(uint8_t r, uint8_t g, uint8_t b) {
+void PxMatrixScreen::setColorOffset(uint8_t r, uint8_t g, uint8_t b) {
     if ((color_half_step + r) < 0)
         r = -color_half_step;
     if ((color_half_step + r) > 255)
@@ -338,8 +273,7 @@ inline void PxMatrixScreen::setColorOffset(uint8_t r, uint8_t g, uint8_t b) {
     _color_B_offset = b;
 }
 
-inline void
-PxMatrixScreen::fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b, bool selected_buffer) {
+void PxMatrixScreen::fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b, bool selected_buffer) {
     if ((x < 0) || (x >= _width) || (y < 0) || (y >= _height))
         return;
 //    if (_rotate) {
@@ -396,7 +330,7 @@ PxMatrixScreen::fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uin
 //        y = new_block_y * rows_per_block + block_y_mod + base_y_offset * rows_per_buffer;
 //    }
 
-    // This code sections computes the byte in the buffer that will be manipulated.
+    // This code sections computes the byte in the maxBuffer that will be manipulated.
     if (_scan_pattern != LINE && _scan_pattern != WZAGZIG && _scan_pattern != VZAG) {
         // Precomputed row offset values
         base_offset = _row_offset[y] - (x / 8) * 2;
@@ -413,7 +347,7 @@ PxMatrixScreen::fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uin
     } else {
         // can only be non-zero when _height/(2 inputs per panel)/_row_pattern > 1
         // i.e.: 32x32 panel with 1/8 scan (A/B/C lines) -> 32/2/8 = 2
-        uint8_t vert_index_in_buffer = (y % _rows_per_buffer) / _row_pattern; // which set of rows per buffer
+        uint8_t vert_index_in_buffer = (y % _rows_per_buffer) / _row_pattern; // which set of rows per maxBuffer
         // can only ever be 0/1 since there are only ever 2 separate input sets present for this variety of panels (R1G1B1/R2G2B2)
         uint8_t which_buffer = y / _rows_per_buffer;
         uint8_t x_byte = x / 8;
@@ -502,7 +436,7 @@ PxMatrixScreen::fillMatrixBuffer(int16_t x, int16_t y, uint8_t r, uint8_t g, uin
     }
 }
 
-inline void PxMatrixScreen::drawPixelRGB565(int16_t x, int16_t y, uint16_t color) {
+void PxMatrixScreen::drawPixelRGB565(int16_t x, int16_t y, uint16_t color) {
     // writing = true;
     uint8_t r = ((((color >> 11) & 0x1F) * 527) + 23) >> 6;
     uint8_t g = ((((color >> 5) & 0x3F) * 259) + 33) >> 6;
@@ -515,7 +449,7 @@ inline void PxMatrixScreen::drawPixelRGB565(int16_t x, int16_t y, uint16_t color
 // writing = false;
 }
 
-inline void PxMatrixScreen::drawPixelRGB888(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b) {
+void PxMatrixScreen::drawPixelRGB888(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b) {
     // writing = true;
 #ifdef PxMATRIX_double_buffer
     fillMatrixBuffer(x, y, r, g, b, !_active_buffer);
@@ -526,7 +460,7 @@ inline void PxMatrixScreen::drawPixelRGB888(int16_t x, int16_t y, uint8_t r, uin
 }
 
 // the most basic function, get a single pixel
-inline uint8_t PxMatrixScreen::getPixel(int8_t x, int8_t y) {
+uint8_t PxMatrixScreen::getPixel(int8_t x, int8_t y) {
     return (0);//PxMATRIX_buffer[x+ (y/8)*LCDWIDTH] >> (y%8)) & 0x1;
 }
 
@@ -536,7 +470,7 @@ void PxMatrixScreen::begin() {
 }
 
 
-void PxMatrixScreen::spiInit() {
+void PxMatrixScreen::spi_init() {
     //spiClass = SPIClass(VSPI);
 #ifdef ESP32
     spiClass.begin(_SPI_CLK, -1, _SPI_MOSI, _SPI_SS);
@@ -574,7 +508,7 @@ void PxMatrixScreen::spiInit() {
 
 }
 
-void PxMatrixScreen::begin(const uint8_t &row_pattern) {
+void PxMatrixScreen::begin(uint8_t row_pattern) {
 
     _row_pattern = row_pattern;
     if (_row_pattern == 4)
@@ -587,7 +521,7 @@ void PxMatrixScreen::begin(const uint8_t &row_pattern) {
 
     pinMode(_REG_LATCH_PIN, OUTPUT);
 
-    spiInit();
+    spi_init();
 
     pinMode(_OE_PIN, OUTPUT);
     pinMode(_LATCH_PIN, OUTPUT);
@@ -609,14 +543,14 @@ void PxMatrixScreen::latch(uint16_t show_time, uint8_t value) {
             unsigned long start_time = micros();
             //while ((micros() - start_time) < show_time)
             //asm volatile (" nop ");
-            while ((micros() - start_time) < showTime)
+            while ((micros() - start_time) < show_time)
                     asm volatile("nop");
             digitalWrite(_OE_PIN, 1);
         }
     }
 }
 
-void PxMatrixScreen::latch(const uint16_t &show_time) {
+void PxMatrixScreen::latch(uint16_t show_time) {
 
     if (_driver_chip == SHIFT) {
         //digitalWrite(_OE_PIN,0); // <<< remove this
@@ -630,8 +564,9 @@ void PxMatrixScreen::latch(const uint16_t &show_time) {
             digitalWrite(_OE_PIN, 0);
 
 
+            // delayMicroseconds(delayTime);
+
             delayMicroseconds(show_time);
-            //delayMicroseconds(show_time);
 
 //            while ((micros() - start_time) < show_time)
 //                asm volatile("nop");
@@ -661,6 +596,10 @@ void PxMatrixScreen::latch(const uint16_t &show_time) {
     }
 }
 
+void PxMatrixScreen::display() {
+    display(_draw_time);
+}
+
 void PxMatrixScreen::set_mux(uint8_t value) {
     value |= _other_pins_state;
     digitalWrite(_REG_LATCH_PIN, 0);
@@ -671,11 +610,26 @@ void PxMatrixScreen::set_mux(uint8_t value) {
 }
 
 
+
+
 void PxMatrixScreen::display(uint16_t show_time) {
     if (show_time < 10)
         show_time = 10;
+    unsigned long start_time = 0;
+#ifdef ESP8266
+    ESP.wdtFeed();
+#endif
 
     uint8_t (*bufferp)[PxMATRIX_COLOR_DEPTH][buffer_size] = &PxMATRIX_buffer;
+
+#ifdef PxMATRIX_double_buffer
+    if(_active_buffer)
+      bufferp=&PxMATRIX_buffer2;
+    else
+      bufferp=&PxMATRIX_buffer;
+#endif
+
+    unsigned long nanoStart = micros();
 
     for (uint8_t i = 0; i < _row_pattern; i++) {
         // yield();
@@ -713,22 +667,114 @@ void PxMatrixScreen::display(uint16_t show_time) {
                 latch(show_time * ((uint16_t) _brightness) / 255);
             }
         }
+//        if (_driver_chip == FM6124 || _driver_chip == FM6126A) // _driver_chip == FM6124
+//        {
+//#ifdef ESP32
+//
+//            GPIO_REG_CLEAR(1 << _OE_PIN);
+//            uint8_t *bf = &(*bufferp)[_display_color][i * _send_buffer_size];
+//
+//            spi_t *spibus = spiClass.bus();
+//            spiSimpleTransaction(spibus);
+//
+//            spiWriteNL(spibus, bf, _send_buffer_size - 1);
+//            uint8_t v = bf[_send_buffer_size - 1];
+//
+//            GPIO_REG_SET(1 << _OE_PIN);
+//
+//            spibus->dev->mosi_dlen.usr_mosi_dbitlen = 4;
+//            spibus->dev->miso_dlen.usr_miso_dbitlen = 0;
+//            spibus->dev->data_buf[0] = v;
+//            spibus->dev->cmd.usr = 1;
+//            while (spibus->dev->cmd.usr);
+//
+//            GPIO_REG_SET(1 << _LATCH_PIN);
+//
+//            spibus->dev->mosi_dlen.usr_mosi_dbitlen = 2;
+//            spibus->dev->data_buf[0] = v << 5;
+//            spibus->dev->cmd.usr = 1;
+//            while (spibus->dev->cmd.usr);
+//            GPIO_REG_CLEAR(1 << _LATCH_PIN);
+//
+//            spiEndTransaction(spibus);
+//            set_mux(i);
+//#else
+//#if defined(ESP8266) || defined(ESP32)
+//            pinMode(_SPI_CLK, SPECIAL);
+//            pinMode(_SPI_MOSI, SPECIAL);
+//#endif
+//          SPI_TRANSFER(&(*bufferp)[_display_color][i*_send_buffer_size],_send_buffer_size-1);
+//          pinMode(_SPI_CLK, OUTPUT);
+//          pinMode(_SPI_MOSI, OUTPUT);
+//          pinMode(_SPI_MISO, OUTPUT);
+//          pinMode(_SPI_SS, OUTPUT);
+//          set_mux(i);
+//
+//          uint8_t v = (*bufferp)[_display_color][i*_send_buffer_size + _send_buffer_size - 1];
+//          for (uint8_t this_byte = 0; this_byte < 8; this_byte++) {
+//            if (((v >> (7 - this_byte)) & 1))
+//              GPIO_REG_SET( 1 << _SPI_MOSI);
+//            else
+//              GPIO_REG_CLEAR( 1 << _SPI_MOSI);
+//            GPIO_REG_SET( 1 << _SPI_CLK);
+//            GPIO_REG_CLEAR( 1 << _SPI_CLK);
+//
+//            if (this_byte == 4)
+//              //GPIO_REG_SET( 1 << _LATCH_PIN);
+//              digitalWrite(_LATCH_PIN, HIGH);
+//          }
+//          //GPIO_REG_WRITE(GPIO_  spi_init();
+//
+//          digitalWrite(_LATCH_PIN, LOW);
+//          //GPIO_REG_SET( 1 << _OE_PIN);
+//          digitalWrite(_OE_PIN, 0); //<<<< insert this
+//          unsigned long start_time = micros();
+//
+//          while ((micros()-start_time)<show_time)
+//            delayMicroseconds(1);
+//          //GPIO_REG_CLEAR( 1 << _OE_PIN);
+//          digitalWrite(_OE_PIN, 1);
+//          //latch(show_time*(uint16_t)_brightness/255);
+//#endif
+//        }
     }
-
     _display_color++;
     if (_display_color >= PxMATRIX_COLOR_DEPTH) {
         _display_color = 0;
     }
 }
 
-void PxMatrixScreen::flushDisplay() {
+void PxMatrixScreen::flushDisplay(void) {
     for (int ii = 0; ii < _send_buffer_size; ii++)
         SPI_BYTE(0x00);
 }
 
+void PxMatrixScreen::displayTest() {
+    if (!_initialized) {
+        startDisplayThread();
+    }
+}
 
-void PxMatrixScreen::clear() {
+
+void PxMatrixScreen::clearDisplay(void) {
+#ifdef PxMATRIX_double_buffer
+    clearDisplay(!_active_buffer);
+#else
+    clearDisplay(false);
+#endif
+}
+//    void * memset ( void * ptr, int value, size_t num );
+
+// clear everything
+void PxMatrixScreen::clearDisplay(bool selected_buffer) {
+#ifdef PxMATRIX_double_buffer
+    if(selected_buffer)
+      memset(PxMATRIX_buffer2, 0, PxMATRIX_COLOR_DEPTH*buffer_size);
+    else
+      memset(PxMATRIX_buffer, 0, PxMATRIX_COLOR_DEPTH*buffer_size);
+#else
     memset(PxMATRIX_buffer, 0, PxMATRIX_COLOR_DEPTH * buffer_size);
+#endif
 }
 
 void PxMatrixScreen::setPinState(free_pin pin, uint8_t state) {
@@ -768,4 +814,138 @@ void PxMatrixScreen::setPinState(free_pin pin, uint8_t state) {
 
 }
 
+PxMatrixScreen PxMatrixControlInstance = PxMatrixScreen(PxMATRIX_WIDTH, PxMATRIX_HEIGHT, PIN_OUTPUT_PX_MOSI,
+                                                        PIN_OUTPUT_PX_CLK,
+                                                        PIN_OUTPUT_PX_STROBO, PIN_OUTPUT_PX_OE, PIN_OUTPUT_PX_REGLATCH);
+
+//void writeToRegisterPin(uint8_t pin, uint8_t state) {
+//    //TODO
+//    PxMatrixControlInstance.setPinState(static_cast<free_pin>(pin), state);
+//}
+
+
+
+//hw_timer_t * timer = NULL;
+
+
+//void IRAM_ATTR old_display_updater(void * display){
+//    for(;;)
+//    {
+//        PxMatrixClient.display(PxMatrixClient.getDrawTime());
+//
+//    }
+//}
+
+//void threadDisplay(void *pvParameters) {
+//    for (;;) {
+//        PxMatrixControlInstance.display(PxMatrixControlInstance.getDrawTime());
+//        yield();
+//    }
+//}
+
+//TaskHandle_t handle;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+void display_updater() {
+    // Increment the counter and set the time of ISR
+    portENTER_CRITICAL_ISR(&timerMux);
+    PxMatrixControlInstance.display(PxMatrixControlInstance.getDrawTime());
+    //   display.displayTestPattern(70);
+    portEXIT_CRITICAL_ISR(&timerMux);
+}
+
+void PxMatrixScreen::startDisplayThread() {
+    if (!_initialized)
+        begin();
+    timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(timer, &display_updater, true);
+    timerAlarmWrite(timer, PxMATRIX_INTERRUPT_TIMER, true);
+    timerAlarmEnable(timer);
+
+
+
+//    xTaskCreatePinnedToCore(
+//            threadDisplay, /* Function to implement the task */
+//            "Screen Task", /* Name of the task */
+//            10000,  /* Stack size in words */
+//            NULL,  /* Task input parameter */
+//            0,  /* Priority of the task */
+//            &handle,  /* Task handle. */
+//            0); /* Core where the task should run */
+
+
+}
+
+
+void PxMatrixScreen::setDrawTime(uint16_t drawtime) {
+    _draw_time = drawtime;
+}
+
+uint16_t PxMatrixScreen::getDrawTime() const {
+    return _draw_time;
+}
+
+void PxMatrixScreen::setFrequency(int frequency) {
+    spiClass.setFrequency(frequency);
+
+}
+
+void PxMatrixScreen::test() {
+
+    if (!_initialized) {
+        begin();
+        //startDisplayThread();
+    }
+#ifdef PxMATRIX_FULLBRIGHTNESS
+    setBrightness(255);
+        setFastUpdate(true);
+        fullBrightness();
+        return;
 #endif
+    clearDisplay();
+    setCursor(0, 0);
+    setTextColor(PxMatrixControlInstance.white);
+    print("ABCDEFGHIJKLMNOPRSTUWXYZ");
+
+    for (int i = 2; i < 8; i++) {
+
+        writeFillRect(i * 10, 8, 10, 7, PxMatrixControlInstance.colors[i % 8]);
+    }
+    for (int i = 2; i < 8; i++) {
+
+        writeFillRect(i * 10 + 60, 8, 10, 7, PxMatrixControlInstance.colors[i % 8]);
+    }
+
+    writeFillRect(0, 16, 150, 16, PxMatrixControlInstance.white);
+    Serial.println("PXMatrix initialized! Check if TEST PATTERN is displayed without errors");
+}
+
+void PxMatrixScreen::fullBrightness() {
+    if (!_initialized) {
+        begin();
+        startDisplayThread();
+    }
+    fillRect(0, 0, _width, _height, white);
+}
+
+void PxMatrixScreen::writeFrameFromBuffer(uint8_t *buffer, int bufferLength) {
+    memcpy(PxMATRIX_buffer[0], buffer, bufferLength);
+//    for(int i = 0; i < bufferLength; i++)
+//    {
+//        PxMatrixControlInstance.PxMATRIX_buffer[0][i] = testBuffor[i];
+//    }
+}
+
+uint8_t *PxMatrixScreen::getBufferAddress() {
+    return PxMATRIX_buffer[0];
+}
+
+AnimationMode PxMatrixScreen::getAnimationMode() {
+    return LIVE_ANIMATION;
+}
+
+void PxMatrixScreen::drawPixels(const vector<Pixel> &vector) {
+    for (auto p : vector) {
+        this->drawPixel(p.x, p.y, color565(p.r, p.b, p.g)); //TODO : IT SHOULD NOT BE LIKE THIS
+    }
+}

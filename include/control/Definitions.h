@@ -111,9 +111,9 @@ public:
     virtual void setBrightness(const uint8_t &target) = 0;
 
     /**
-     * Reads the screen data from the buffer, used in SD or similar stuff
-     * @param buffer buffer to read
-     * @param bufferLength  length of the buffer
+     * Reads the screen data from the maxBuffer, used in SD or similar stuff
+     * @param buffer maxBuffer to read
+     * @param bufferLength  length of the maxBuffer
      */
     virtual void writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) = 0;
 

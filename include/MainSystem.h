@@ -27,7 +27,7 @@
 
 
 #ifdef PX_MATRIX_SCREEN
-void mainPxScreenThread();
+//void mainPxScreenThread();
 #endif
 
 class LoadedData {
@@ -219,7 +219,7 @@ public:
      */
 #ifdef MAX_MATRIX_SCREEN
 private:
-    Max7219Screen max7219Screen;
+    Max7219Screen max7219Screen = Max7219Screen();
 public:
     Max7219Screen &getMaxScreen() {
         return max7219Screen;
@@ -227,20 +227,22 @@ public:
 
 #endif
 #ifdef PX_MATRIX_SCREEN
-    private:
-        PxMatrixScreen pxMatrixScreen = PxMatrixScreen(PxMATRIX_WIDTH, PxMATRIX_HEIGHT, PIN_OUTPUT_PX_MOSI,
-                                                       PIN_OUTPUT_PX_CLK,
-                                                       PIN_OUTPUT_PX_STROBO, PIN_OUTPUT_PX_OE, PIN_OUTPUT_PX_REGLATCH);
-    public:
-        PxMatrixScreen &getPxMatrixScreen() {
-            return pxMatrixScreen;
-        }
-        void startDisplayThread(){
-            pxMatrixScreen.timer = timerBegin(0, 80, true);
-            timerAttachInterrupt(pxMatrixScreen.timer, &mainPxScreenThread, true);
-            timerAlarmWrite(pxMatrixScreen.timer, PxMATRIX_INTERRUPT_TIMER, true);
-            timerAlarmEnable(pxMatrixScreen.timer);
-        }
+private:
+//        PxMatrixScreen pxMatrixScreen = PxMatrixScreen(PxMATRIX_WIDTH, PxMATRIX_HEIGHT, PIN_OUTPUT_PX_MOSI,
+//                                                       PIN_OUTPUT_PX_CLK,
+//                                                       PIN_OUTPUT_PX_STROBO, PIN_OUTPUT_PX_OE, PIN_OUTPUT_PX_REGLATCH);
+public:
+    PxMatrixScreen &getPxMatrixScreen() {
+        return PxMatrixControlInstance;
+    }
+
+    void startDisplayThread() {
+        //getPxMatrixScreen().startDisplayThread();
+        //   pxMatrixScreen.timer = timerBegin(0, 80, true);
+        // timerAttachInterrupt(pxMatrixScreen.timer, &mainPxScreenThread, true);
+        //timerAlarmWrite(pxMatrixScreen.timer, PxMATRIX_INTERRUPT_TIMER, true);
+        //timerAlarmEnable(pxMatrixScreen.timer);
+    }
 
 #endif
 #ifdef WS_MATRIX_SCREEN
@@ -346,13 +348,13 @@ public:
         max7219Screen.test();
 #endif
 #ifdef PX_MATRIX_SCREEN
-        pxMatrixScreen.test();
+        getPxMatrixScreen().test();
 #endif
 #ifdef CURRENT_VOLTAGE_SENSOR
         currentVoltageSensor.test(); //TODO:TEST?
 #endif
-#ifdef FAN_GLOBAL_INSTANCE
-        QC3FanControlInstance.test();
+#ifdef FAN_QC_CONTROL
+        qc3FanControl.test();
 #endif
 #ifdef SD_SUPPORT
         testSD();

@@ -7,7 +7,7 @@
 
 #include <random>
 #include "ConstantsAndSettings.h"
-
+#ifdef MAX_MATRIX_SCREEN
 #define MAX7219_TEST 0x0f // in real code put into a .h file
 #define MAX7219_BRIGHTNESS 0x0a // in real code put into a .h file
 #define MAX7219_SCAN_LIMIT 0x0b // in real code put into a .h file
@@ -58,8 +58,8 @@ public:
               const uint8_t &clk, const uint8_t &ss,
               const ConnectionType &connectionType) {
         matricesNumber = numberOfMatrices;
-        //buffer = new uint8_t[numberOfMatrices * 8];
-        //Serial.println("BUFFER WRITING COMPLETED! RESULT: " + String(buffer == nullptr));
+        //maxBuffer = new uint8_t[numberOfMatrices * 8];
+        //Serial.println("BUFFER WRITING COMPLETED! RESULT: " + String(maxBuffer == nullptr));
 
         spiMosi = mosi;
         spiClk = clk;
@@ -68,7 +68,9 @@ public:
         _width = width;
         WIDTH = _width * 8;
         HEIGHT = _height * 8;
-
+        prefillOffsets();
+        Serial.println("INITIALIZED");
+        return;
         if (connectionType == SIMPLE_VISOR) {
 #if MAX_CONNECTION_TYPE == 3
             for (int x = 0; x < WIDTH; x++) {
@@ -87,11 +89,13 @@ public:
 private:
 
     int offsets[MAX_WIDTH * 8][MAX_HEIGHT * 8];
-    uint8_t buffer[MAX_MATRICES_NUMBER * 8];
+    uint8_t maxBuffer[MAX_MATRICES_NUMBER * 8];
     uint8_t matricesNumber = MAX_MATRICES_NUMBER;
-    uint8_t spiMosi = PIN_OUTPUT_MAX_MOSI;
-    uint8_t spiClk = PIN_OUTPUT_MAX_CLK;
-    uint8_t spiSS = PIN_OUTPUT_MAX_CS;
+    int8_t spiMosi = PIN_OUTPUT_MAX_MOSI;
+    int8_t spiClk = PIN_OUTPUT_MAX_CLK;
+    int8_t spiSS = PIN_OUTPUT_MAX_CS;
+    int _width;
+    int _height;
     unsigned long lastStartupCommandsSend = 0;
 
     bool initialized = false;
@@ -120,16 +124,14 @@ private:
     }
 
 
-    void prefillOffsets(const int &squareLength = 2) {
+    void prefillOffsets() {
+        Serial.println("PREFILLING");
         //TODO: Change numbers to being calculated
-        int squarePixelsLength = squareLength * 8;
-        int totalPixelsPerBulk = squarePixelsLength * squareLength;
-        int numberOfBulks = this->matricesNumber / 4;
-        for (int i = 0; i < numberOfBulks; i++) {
-            for (int y = 0; y < squarePixelsLength; y++) {
-                for (int x = 0; x < squarePixelsLength; x++) {
-                    offsets[x][i * squarePixelsLength + y] =
-                            i * totalPixelsPerBulk + ((y / 8) * 8) + x + ((x / 8) * (8));
+        for (int i = 0; i < 2; i++) {
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
+                    offsets[x][i * 16 + y] = i * 32 + (y / 8) * 8 + x + (x / 8) * (8);
+                    offsets[x][i * 16 + y] = i * 32 + (y / 8) * 8 + x + (x / 8) * (8);
                 }
             }
         }
@@ -138,5 +140,5 @@ private:
 
 };
 
-
+#endif
 #endif //VISORV3_MAX7219SCREEN_H

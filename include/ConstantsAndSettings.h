@@ -12,8 +12,8 @@
 /**
  * What configuration you want to get enabled? Here, you can switch between preprogrammed options, or define your own!
  */
-//#define Z_CONFIGURATION
-#define STANDARD_MAX_CONFIGURATION
+#define Z_CONFIGURATION
+//#define STANDARD_MAX_CONFIGURATION
 
 /**
  * Import pin definitions

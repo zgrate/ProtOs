@@ -123,7 +123,7 @@ String readString(Stream &s) {
 }
 
 void writeShort(const uint16_t &number, uint8_t *bytes, const uint16_t &from) {
-    debugPrint("Writing number to buffer " + String(number));
+    debugPrint("Writing number to maxBuffer " + String(number));
     bytes[from + 0] = (uint8_t) number;
     bytes[from + 1] = (uint8_t) (number >> 8);
 }

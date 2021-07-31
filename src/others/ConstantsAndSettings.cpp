@@ -4,8 +4,8 @@
 
 #define JSON_DOC_CAPA 1024
 
-String wifiSsid = "ZRoom";
-String wifiPassword = "OculusQuest2";
+String wifiSsid = "Hausmeerschweichen";
+String wifiPassword = "1234567890abcde";
 String wifiHostname = "ZVIS";
 String ipAddress = "";
 bool isRunning = true;

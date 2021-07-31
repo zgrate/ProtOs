@@ -19,6 +19,7 @@ void mainTask(void *pvParameters) {
         //WifiManagerInstance.loop();
         //TODO: OTHERS
         MainSystem::getMainSystem().mainDisplayLoop();
+       // wifiLoop(&MainSystem::getMainSystem().getWifiManager());
         vTaskDelay(10);
         yield();
     }
@@ -35,16 +36,16 @@ void MainSystem::setup() {
             nullptr,        /* parameter of the task */
             1,           /* priority of the task */
             &Task1,      /* Task handle to keep track of created task */
-            0);          /* pin task to core 0 */
+            1);          /* pin task to core 0 */
 }
 
 
 void MainSystem::loop() {
 #ifdef PX_MATRIX_SCREEN
-    pxMatrixScreen.display();
+    getPxMatrixScreen().display();
 #else
-    vTaskDelay(10);
 #endif
+    vTaskDelay(10);
 
 }
 
@@ -71,7 +72,7 @@ void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
 
 void MainSystem::beginAll() {
 #ifdef PX_MATRIX_SCREEN
-    pxMatrixScreen.begin();
+    getPxMatrixScreen().begin();
     startDisplayThread();
 #endif
 #ifdef MAX_MATRIX_SCREEN
@@ -109,13 +110,13 @@ void MainSystem::mainDisplayLoop() {
 #ifdef PX_MATRIX_SCREEN
         if (data->getPxFrames() != 0) {
             if (!data->isStreaming()) {
-                pxMatrixScreen.writeFrameFromBuffer(data->getPXFrameStartAddress(currentFramePx),
-                                                    data->getPxFrameSize());
+                getPxMatrixScreen().writeFrameFromBuffer(data->getPXFrameStartAddress(currentFramePx),
+                                                         data->getPxFrameSize());
             } else {
                 if (currentFramePx == 0) {
                     data->seekPXMatrixData(0);
                 }
-                data->readPxToBuffer(pxMatrixScreen.getBufferAddress());
+                data->readPxToBuffer(getPxMatrixScreen().getBufferAddress());
             }
             currentFramePx++;
             if (currentFramePx >= data->getPxFrames()) {
@@ -187,7 +188,7 @@ void main_ns::clearDisplay(const uint8_t &screenId) {
 #ifdef PX_MATRIX_SCREEN
         case PX_MATRIX_SCREEN:
             if (MainSystem::getMainSystem().getPxMatrixScreen().getAnimationMode() == AnimationMode::LIVE_ANIMATION) {
-                MainSystem::getMainSystem().getPxMatrixScreen().clear();
+                MainSystem::getMainSystem().getPxMatrixScreen().clearDisplay();
             }
             break;
 #endif
@@ -493,11 +494,11 @@ void LoadedData::readPxToBuffer(uint8_t *buffer) {
 }
 
 #ifdef PX_MATRIX_SCREEN
-void mainPxScreenThread() {
-    portENTER_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
-    MainSystem::getMainSystem().getPxMatrixScreen().display();
-    //   display.displayTestPattern(70);
-    portEXIT_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
-
-}
+//void mainPxScreenThread() {
+//    portENTER_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
+//    MainSystem::getMainSystem().getPxMatrixScreen().display();
+//    //   display.displayTestPattern(70);
+//    portEXIT_CRITICAL_ISR(&MainSystem::getMainSystem().getPxMatrixScreen().timerMux);
+//
+//}
 #endif

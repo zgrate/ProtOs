@@ -67,7 +67,8 @@ public:
         WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
         WiFi.setHostname(s.c_str());
         WiFi.begin(wifiSsid.c_str(), wifiPassword.c_str());
-        while (WiFi.status() != WL_CONNECTED) {
+        long long mil = millis();
+        while (WiFi.status() != WL_CONNECTED && (millis() - mil > 2000)) {
             delay(500);
             Serial.print(".");
         }

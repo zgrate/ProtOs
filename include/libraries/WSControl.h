@@ -40,12 +40,12 @@ public:
         FastLED.clear(true);
     }
 
-    void writeFrameFromBuffer(const uint8_t *buffer, const int &bufferLength) override {
-        Serial.println((unsigned long) buffer);
+    void writeFrameFromBuffer(const uint8_t *maxBuffer, const int &bufferLength) override {
+        Serial.println((unsigned long) maxBuffer);
         Serial.println(bufferLength);
         FastLED.clearData();
         for (int i = 0; i < bufferLength; i += 3) {
-            ledsArray[i] = CRGB(*(buffer + i), *(buffer + i + 1), *(buffer + i + 2));
+            ledsArray[i] = CRGB(*(maxBuffer + i), *(maxBuffer + i + 1), *(maxBuffer + i + 2));
         }
         display();
 

@@ -3,7 +3,7 @@
 //
 
 #include "libraries/Max7219Screen.h"
-
+#ifdef MAX_MATRIX_SCREEN
 #if MAX_CONNECTION_TYPE == 3
 uint8_t SIMPLE_VISOR_OFFSETS[32][24] = {
         {7,  6,  5,  4,  3,  2,  1,  0,  23, 22, 21, 20, 19, 18, 17, 16, 71, 70, 69, 68, 67, 66, 65, 64},
@@ -50,10 +50,12 @@ Max7219Screen::Max7219Screen() : Adafruit_GFX(MAX_WIDTH * 8, MAX_HEIGHT * 8) {
 }
 
 void Max7219Screen::begin() {
+    init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
+         PIN_OUTPUT_MAX_CS, (ConnectionType) MAX_CONNECTION_TYPE);
     pinMode(spiClk, OUTPUT);
     pinMode(spiSS, OUTPUT);
     pinMode(spiMosi, OUTPUT);
-    maxSpiClass.begin(spiClk, -1, spiMosi, spiSS);
+    maxSpiClass.begin(spiClk, 1, spiMosi, spiSS);
     maxSpiClass.setFrequency(MAX_SPI_FREQ);
     maxSpiClass.setBitOrder(MSBFIRST);
     maxSpiClass.setDataMode(SPI_MODE0);
@@ -88,17 +90,17 @@ void Max7219Screen::drawPixel(int16_t x, int16_t y, uint16_t color) {
 #if MAX_CONNECTION_TYPE == 3
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
         if (color > 0) {
-            buffer[offsets[x][y]] |= 1 << (x % 8);
+            maxBuffer[offsets[x][y]] |= 1 << (x % 8);
         } else {
-            buffer[offsets[x][y]] &= ~(1 << (x % 8));
+            maxBuffer[offsets[x][y]] &= ~(1 << (x % 8));
         }
     }
 #else //TODO: THINK OF IT... Maybe just change rotation mode? of something....
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
         if (color > 0) {
-            buffer[offsets[x][y]] |= 1 << (y % 8);
+            maxBuffer[offsets[x][y]] |= 1 << (y % 8);
         } else {
-            buffer[offsets[x][y]] &= ~(1 << (y % 8));
+            maxBuffer[offsets[x][y]] &= ~(1 << (y % 8));
         }
     }
 #endif
@@ -112,7 +114,7 @@ void Max7219Screen::display() {
         digitalWrite(spiSS, LOW);
         for (int dev = matricesNumber - 1; dev >= 0; dev--) {
             maxSpiClass.transfer(i);
-            maxSpiClass.transfer(buffer[i - 1 + dev * 8]);
+            maxSpiClass.transfer(maxBuffer[i - 1 + dev * 8]);
         }
         digitalWrite(spiSS, HIGH);
     }
@@ -120,7 +122,7 @@ void Max7219Screen::display() {
 
 void Max7219Screen::clear() {
     for (int i = 0; i < matricesNumber * 8; i++) {
-        buffer[i] = 0;
+        maxBuffer[i] = 0;
     }
     display();
 }
@@ -129,21 +131,24 @@ void Max7219Screen::test() {
     if (!initialized)
         begin();
     clear();
+
+#ifdef MAX_FULLPOWER_TEST
+    pinMode(spiMosi, OUTPUT);
     pinMode(spiClk, OUTPUT);
     pinMode(spiSS, OUTPUT);
-    pinMode(spiMosi, OUTPUT);
-#ifdef MAX_FULLPOWER_TEST
     sendCommand(MAX7219_TEST, 0x01);
     return;
 #endif
+    sendStartupCommands();
     setTextColor(MAX_ON_PIXEL);
     setCursor(0, 0);
     char c = 'A';
-    for (int n = 0; n < matricesNumber * 2; n++) {
+    for (int n = 0; n < matricesNumber; n++) {
         print(c);
         c++;
     }
     display();
+    Serial.println("SEND!");
 }
 
 int Max7219Screen::getFPS() const {
@@ -151,7 +156,7 @@ int Max7219Screen::getFPS() const {
 }
 
 void Max7219Screen::writeFrameFromBuffer(const uint8_t *frameStartAddress, const int &frameLength) {
-    memcpy(buffer, frameStartAddress, frameLength);
+    memcpy(maxBuffer, frameStartAddress, frameLength);
     display();
 }
 
@@ -165,3 +170,5 @@ void Max7219Screen::setBrightness(const uint8_t &target) {
     if (target >= 0 && target <= 8)
         sendCommand(MAX7219_BRIGHTNESS, target);  // Use lowest intensity
 }
+
+#endif

@@ -50,9 +50,9 @@ enum class PacketPipeline {
 };
 
 /**
- * Caluclates CRC8 of the given buffer
- * @param addr Address of the buffer
- * @param len Length of the buffer
+ * Caluclates CRC8 of the given maxBuffer
+ * @param addr Address of the maxBuffer
+ * @param len Length of the maxBuffer
  * @return 8-bit crc8 chechsum
  */
 uint8_t crc8(const uint8_t *addr, uint16_t len);
@@ -90,7 +90,7 @@ public:
     /**
      * Generates the bytes from the packet
      * @param length Pointer to the variable where length will be saved
-     * @return Pointer to the buffer. It should be deleted after usage, as it is dynamically allocated
+     * @return Pointer to the maxBuffer. It should be deleted after usage, as it is dynamically allocated
      */
     virtual uint8_t *getPacket(uint16_t *length) = 0;
 
@@ -116,9 +116,9 @@ public:
     explicit ServerBoundPacket(int i, PacketPipeline pipeline) : BasePacket(i, pipeline) {};
 
     /**
-     * Reads the packet from the given buffer and length and constucts the packet
+     * Reads the packet from the given maxBuffer and length and constucts the packet
      * @param buffer Buffer
-     * @param length Length of the buffer
+     * @param length Length of the maxBuffer
      */
     virtual void readPacket(const uint8_t *buffer, const uint16_t &length) = 0;
 };
