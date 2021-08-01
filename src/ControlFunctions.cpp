@@ -40,6 +40,8 @@ void processIncomingPacket(const std::shared_ptr<ServerBoundPacket> &packet) {
         processIncomingS0D(std::static_pointer_cast<S0DFileUpload>(packet));
     } else if (packet->getPacketId() == 14) {
         processIncomingS0E(std::static_pointer_cast<S0EControlSet>(packet));
+    } else if (packet->getPacketId() == 15) {
+        processIncomingS0F(std::static_pointer_cast<S0FExternalControlData>(packet));
     }
 }
 
@@ -161,4 +163,8 @@ void processIncomingS05(const shared_ptr<S05RequestSensor> &pointer) {
 
 void processIncomingS0E(const shared_ptr<S0EControlSet> &pointer) {
     main_ns::control(pointer->getControlId(), pointer->getControlValue());
+}
+
+void processIncomingS0F(const shared_ptr<S0FExternalControlData> &pointer) {
+
 }

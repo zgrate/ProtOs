@@ -25,4 +25,6 @@ void processIncomingS0D(const std::shared_ptr<S0DFileUpload> &pointer);
 
 void processIncomingS0E(const shared_ptr<S0EControlSet> &pointer);
 
+void processIncomingS0F(const shared_ptr<S0FExternalControlData> &pointer);
+
 #endif //VISORV3_CONTROLFUNCTIONS_H

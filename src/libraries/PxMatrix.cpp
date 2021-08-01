@@ -923,7 +923,7 @@ void PxMatrixScreen::test() {
 void PxMatrixScreen::fullBrightness() {
     if (!_initialized) {
         begin();
-        startDisplayThread();
+        //startDisplayThread();
     }
     fillRect(0, 0, _width, _height, white);
 }

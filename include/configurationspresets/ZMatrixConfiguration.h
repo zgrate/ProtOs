@@ -32,7 +32,7 @@
 //WIFI CONNECTION
 #define WIFI_SUPPORT
 //BLUETOOTH CONNECTION
-//#define BLUETOOTH_SUPPORT
+#define BLUETOOTH_SUPPORT
 //TIME
 #define TIME_SUPPORT
 
@@ -89,7 +89,7 @@
 #ifdef PX_MATRIX_SCREEN
 
 // Defines how long we display things by default
-#define PxMATRIX_SHOWTIME 40
+#define PxMATRIX_SHOWTIME 50
 
 // Defines the speed of the spiClass bus (reducing this may help if you experience noisy images)
 #define PxMATRIX_SPI_FREQUENCY 15000000
@@ -232,9 +232,6 @@
 #define BLUETOOTH_CHARACTERISTIC_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f99508e"
 
 
-//PIN used to protect the connection. This is default pin, that can be overridden
-const int BLUETOOTH_CONNECTION_PIN = 11991;
-
 //Define if you want global Bluetooth instance
 #define BLUETOOTH_GLOBAL_INSTANCE
 
@@ -266,8 +263,8 @@ extern int wifiPort;
  */
 extern String ipAddress;
 #endif
-//Define if you want debug output to be redirected to Serial
-//#define SERIAL_DEBUG
+//Define if you want debug output to be redirected to `Seria`l
+#define SERIAL_DEBUG
 
 
 #endif //VISORV3_PXMATRIXPINDEFINITIONS_H

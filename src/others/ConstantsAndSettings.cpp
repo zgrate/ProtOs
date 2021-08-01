@@ -18,8 +18,7 @@ void debugPrint(const String &text) {
     Serial.println(text);
 }
 
-void debugPrint(const int &text)
-{
+void debugPrint(const long &text) {
     Serial.println(text);
 }
 #else

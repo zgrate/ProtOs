@@ -5,6 +5,7 @@
 #ifndef VISORV3_MAINSYSTEM_H
 #define VISORV3_MAINSYSTEM_H
 
+#include <control/BluetoothManager.h>
 #include "Arduino.h"
 #include "SD_MMC.h"
 #include "ConstantsAndSettings.h"
@@ -29,6 +30,47 @@
 #ifdef PX_MATRIX_SCREEN
 //void mainPxScreenThread();
 #endif
+namespace main_ns {
+
+/**
+ * Draws on the screen, while the screen is in LiveAnimation mode
+ * @param screenId ID of the screen, based on configuration file
+ * @param vector List of pixels to draw
+ */
+    void liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector);
+
+    /**
+     * Clears the screen (sets all pixels to BLACK)
+     * @param screenId ID of the screen, based on configuration file
+     */
+    void clearDisplay(const uint8_t &screenId);
+
+    /**
+     * Reads the data from the given sensor
+     * @param sensorId ID of the sensor, based on configuration file
+     * @param type pointer to the variable holding the type of the sensor
+     * @return value read from the sensor, in a format defined by the type
+     */
+    String readSensor(const uint8_t &sensorId, uint8_t *type);
+
+    /**
+     * Sends the control signal to the device, controlling something
+     * @param controlId Id of the control, defined in configuration
+     * @param stringValue string value of a control value, for example target speed
+     */
+    void control(const uint8_t &controlId, const String &stringValue);
+
+    /**
+     * Forwards the packet to the Network Thread and sends it
+     * @param packet Packet to send
+     */
+    void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
+
+    /**
+     *
+     */
+    bool readInputState(int pinNumber);
+}
 
 class LoadedData {
 private:
@@ -338,6 +380,7 @@ public:
 
     void executeTests() {
         Serial.println("STARTING TESTS....");
+        Serial.println(main_ns::readInputState(PIN_INPUT_DIPSWITCH_1));
 #ifdef THERMOMETER_HYDROMETER_SENSOR
         thermometerSensor.test();
 #endif
@@ -362,47 +405,12 @@ public:
 #ifdef OLED_SUPPORT //TODO TEST MUST ME MADE USING I2C SCANNER
         oledControl.test();
 #endif
+
         Serial.println("Tests COMPLETED!");
     };
 
 };
 
-namespace main_ns {
-
-/**
- * Draws on the screen, while the screen is in LiveAnimation mode
- * @param screenId ID of the screen, based on configuration file
- * @param vector List of pixels to draw
- */
-    void liveDrawUpdate(const uint8_t &screenId, const vector<Pixel> &vector);
-
-    /**
-     * Clears the screen (sets all pixels to BLACK)
-     * @param screenId ID of the screen, based on configuration file
-     */
-    void clearDisplay(const uint8_t &screenId);
-
-    /**
-     * Reads the data from the given sensor
-     * @param sensorId ID of the sensor, based on configuration file
-     * @param type pointer to the variable holding the type of the sensor
-     * @return value read from the sensor, in a format defined by the type
-     */
-    String readSensor(const uint8_t &sensorId, uint8_t *type);
-
-    /**
-     * Sends the control signal to the device, controlling something
-     * @param controlId Id of the control, defined in configuration
-     * @param stringValue string value of a control value, for example target speed
-     */
-    void control(const uint8_t &controlId, const String &stringValue);
-
-    /**
-     * Forwards the packet to the Network Thread and sends it
-     * @param packet Packet to send
-     */
-    void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
-}
 
 
 #endif //VISORV3_MAINSYSTEM_H

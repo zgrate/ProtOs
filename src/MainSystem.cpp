@@ -44,8 +44,8 @@ void MainSystem::loop() {
 #ifdef PX_MATRIX_SCREEN
     getPxMatrixScreen().display();
 #else
-#endif
     vTaskDelay(10);
+#endif
 
 }
 
@@ -60,6 +60,11 @@ void MainSystem::loadNewFile(const String &filename) {
     currentFrameWs = 0;
     frameTime = 1000 / data->getFPS();
 
+}
+
+bool main_ns::readInputState(int pinNumber) {
+    Serial.println(analogRead(pinNumber));
+    return analogRead(pinNumber) < 2000;
 }
 
 void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
@@ -77,7 +82,6 @@ void MainSystem::beginAll() {
 #endif
 #ifdef MAX_MATRIX_SCREEN
     max7219Screen.begin();
-
 #endif
 #ifdef WS_MATRIX_SCREEN
     wsControl.begin();
@@ -95,8 +99,24 @@ void MainSystem::beginAll() {
     oledControl.begin();
 #endif
 #ifdef WIFI_SUPPORT
-    wifiManager.begin();
+#ifdef BLUETOOTH_SUPPORT
+    if (!main_ns::readInputState(PIN_INPUT_DIPSWITCH_1)) {
+#else
+        if(true){
 #endif
+        wifiManager.begin();
+    }
+#endif
+#ifdef BLUETOOTH_SUPPORT
+#ifdef WIFI_SUPPORT
+    if (main_ns::readInputState(PIN_INPUT_DIPSWITCH_1)) {
+#else
+        if(true){
+#endif
+        BluetoothClientInstance.setupBLE();
+    }
+#endif
+
 }
 
 
@@ -240,6 +260,7 @@ void main_ns::control(const uint8_t &controlId, const String &stringValue) {
 #endif
 #ifdef PX_BRIGHTNESS_CONTROL
     if (controlId == PX_BRIGHTNESS_CONTROL) {
+        Serial.println("Setting brigthness...");
         MainSystem::getMainSystem().getPxMatrixScreen().setBrightness(stringValue.toInt());
     }
 #endif

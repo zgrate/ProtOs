@@ -229,19 +229,13 @@ public:
     explicit S0CFileOperation(PacketPipeline pipeline) : ServerBoundPacket(12, pipeline) {}
 
     void readPacket(const uint8_t *array, const uint16_t &length) override {
-        debugPrint("Reading Packet...");
         requestId = array[0];
-        debugPrint(requestId);
         operationType = (FileOperationType) array[1]; //TODO: Exception
-        debugPrint(operationType);
         int wFileLength = 0;
         workingFile = readString(array, 2, &wFileLength);
-        debugPrint(workingFile);
         uint16_t index = 4 + wFileLength;
-        debugPrint(index);
         int len = 0;
         parameters = readString(array, index, &len);
-        debugPrint(parameters);
     }
 
     uint8_t getRequestId() const {
@@ -291,7 +285,7 @@ public:
         requestId = array[0];
         int len = 0;
         targetFile = readString(array, 1, &len);
-        debugPrint(len);
+        Serial.println(len);
         this->length = length - len - 3;
         this->buffer = new uint8_t[this->length];
         for (int i = 0; i < this->length; i++) {
@@ -331,6 +325,21 @@ public :
 
 };
 
+class S0FExternalControlData : public ServerBoundPacket {
+private:
+    uint8_t data = 0;
+
+public:
+    explicit S0FExternalControlData(PacketPipeline pipeline) : ServerBoundPacket(15, pipeline) {};
+
+    uint8_t getData() const {
+        return data;
+    }
+
+    void readPacket(const uint8_t *buffer, const uint16_t &length) override {
+        data = buffer[0];
+    }
+};
 
 /**
  * CLIENT BOUND PACKETS

@@ -34,6 +34,7 @@ std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pip
     debugPrint("Got a package! Reading it....");
     uint8_t id = s.read();
     uint16_t length = readShort(s);
+    debugPrint("I have a packet of id " + String(id) + " and length " + String(length));
     //uint8_t bufferArray[length];
     vTaskDelay(1);
     uint16_t readBytes = 0;
@@ -88,6 +89,9 @@ std::shared_ptr<ServerBoundPacket> constructPacket(Stream &s, PacketPipeline pip
             break;
         case 14:
             Packet = std::shared_ptr<ServerBoundPacket>(new S0EControlSet(pipeline));
+            break;
+        case 15:
+            Packet = std::shared_ptr<ServerBoundPacket>(new S0FExternalControlData(pipeline));
             break;
         default:
             //ERROR! Packet not found!

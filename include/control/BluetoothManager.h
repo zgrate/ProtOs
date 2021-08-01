@@ -5,6 +5,7 @@
 #ifndef VISORV3_BLUETOOTHMANAGER_H
 #define VISORV3_BLUETOOTHMANAGER_H
 
+#include "ConstantsAndSettings.h"
 #ifdef BLUETOOTH_SUPPORT
 /*
     Video: https://www.youtube.com/watch?v=oCMOYS71NIU
@@ -27,7 +28,6 @@
    A begin hander associated with the server starts a background task that performs notification
    every couple of seconds.
 */
-#include "ConstantsAndSettings.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -35,6 +35,8 @@
 #include <Arduino.h>
 #include <bitset>
 #include "map"
+#include "libraries/bytestream/ByteStream.h"
+#include "Packets.h"
 #include "control/ControlFunctions.h"
 
 class BluetoothManager {
@@ -46,8 +48,8 @@ class BluetoothManager {
     bool oldDeviceConnected = false;
     uint32_t value = 0;
 
-    static string show_binary(unsigned int u, int num_of_bits) {
-        string a = "";
+    static String show_binary(unsigned int u, int num_of_bits) {
+        String a = "";
 
         int t = pow(2, num_of_bits);   // t is the max number that can be represented
 
@@ -81,12 +83,19 @@ class BluetoothManager {
         void onRead(BLECharacteristic *chara) override {
             Serial.println("READ");
 
+
         }
 
         void onWrite(BLECharacteristic *chara) override {
-            Serial.println("WRITE");
+            byte *data = chara->getData();
+            auto sh = readShort(data);
 
-            uint8_t *data = chara->getData();
+            ByteStream stream = ByteStream(data + 2, sh);
+
+            auto packet = constructPacket(stream, PacketPipeline::BLUETOOTH);
+            processIncomingPacket(packet);
+
+            return;
             if (BluetoothManager::checkPin(data[1], data[0])) {
                 Serial.println("PIN CORRECT!");
                 //Serial.println(show_binary(data[2], 8).c_str());
@@ -116,7 +125,7 @@ class BluetoothManager {
     static void notifyCallback(
             BLERemoteCharacteristic *pBLERemoteCharacteristic,
             uint8_t *pData,
-            size_t length,
+            std::size_t length,
             bool isNotify) {
         Serial.print("Notify callback for characteristic ");
         Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
@@ -128,7 +137,7 @@ class BluetoothManager {
 
 public:
     void setupBLE() {
-        Serial.begin(115200);
+        Serial.println("Initializing Bluetooth...");
 
         // Create the BLE Device
         BLEDevice::init("BeepBooperLE");
@@ -188,7 +197,7 @@ public:
     }
 };
 
-BluetoothManager BluetoothClientInstance = BluetoothManager();
+extern BluetoothManager BluetoothClientInstance;
 
 #endif
 #endif //VISORV3_BLUETOOTHMANAGER_H
