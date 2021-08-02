@@ -76,6 +76,10 @@ void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
 }
 
 void MainSystem::beginAll() {
+#ifdef SD_SUPPORT
+    beginAndTestSD();
+#endif
+
 #ifdef PX_MATRIX_SCREEN
     getPxMatrixScreen().begin();
     startDisplayThread();
@@ -116,6 +120,7 @@ void MainSystem::beginAll() {
         BluetoothClientInstance.setupBLE();
     }
 #endif
+
 
 }
 

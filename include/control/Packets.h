@@ -325,19 +325,24 @@ public :
 
 };
 
+/**
+ * Play the animation from external source
+ * System supports 255 animations from external source, send by this packet
+ * You have to put the files to the folder named "ext_control", and name animation <numberToPlay>.zgd
+ */
 class S0FExternalControlData : public ServerBoundPacket {
 private:
-    uint8_t data = 0;
+    uint8_t numberToPlay = 0;
 
 public:
     explicit S0FExternalControlData(PacketPipeline pipeline) : ServerBoundPacket(15, pipeline) {};
 
-    uint8_t getData() const {
-        return data;
+    uint8_t getNumberToPlay() const {
+        return numberToPlay;
     }
 
     void readPacket(const uint8_t *buffer, const uint16_t &length) override {
-        data = buffer[0];
+        numberToPlay = buffer[0];
     }
 };
 

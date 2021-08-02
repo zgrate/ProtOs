@@ -64,12 +64,12 @@ class BluetoothManager {
         return a;                     // returns string
     }
 
-    static bool checkPin(uint8_t low, uint8_t high) {
-        int pin = high << 8;
-        pin |= low;
-        Serial.println(pin);
-        return pin == BLUETOOTH_CONNECTION_PIN;
-    }
+//    static bool checkPin(uint8_t low, uint8_t high) {
+//        int pin = high << 8;
+//        pin |= low;
+//        Serial.println(pin);
+//        return pin == BLUETOOTH_CONNECTION_PIN;
+//    }
 
     class BluetoothCallback : public BLECharacteristicCallbacks {
     public:
@@ -96,14 +96,14 @@ class BluetoothManager {
             processIncomingPacket(packet);
 
             return;
-            if (BluetoothManager::checkPin(data[1], data[0])) {
-                Serial.println("PIN CORRECT!");
-                //Serial.println(show_binary(data[2], 8).c_str());
-                //Serial.println(show_binary(data[3], 8).c_str());
-                //processData(data[2], data);
-            } else {
-                Serial.println("INCORRECT PIN!");
-            }
+//            if (BluetoothManager::checkPin(data[1], data[0])) {
+//                Serial.println("PIN CORRECT!");
+//                //Serial.println(show_binary(data[2], 8).c_str());
+//                //Serial.println(show_binary(data[3], 8).c_str());
+//                //processData(data[2], data);
+//            } else {
+//                Serial.println("INCORRECT PIN!");
+//            }
 //            chara->setValue("ASDF");
 //            chara->notify();
         }
@@ -140,7 +140,7 @@ public:
         Serial.println("Initializing Bluetooth...");
 
         // Create the BLE Device
-        BLEDevice::init("BeepBooperLE");
+        BLEDevice::init(bluetoothDeviceName.c_str());
 
         // Create the BLE Server
         pServer = BLEDevice::createServer();

@@ -237,32 +237,6 @@
 
 #endif
 
-#ifdef WIFI_SUPPORT
-//WIFI
-/**
- * SSID of WIFI network, configured
- */
-extern String wifiSsid;
-
-/**
- * Password of wifi network
- */
-extern String wifiPassword;
-
-/**
- * Wifi hostname - It will always start with 'VISS_'
- */
-
-extern String wifiHostname;
-/**
- * Port for the server to listen on wifi
- */
-extern int wifiPort;
-/**
- * Current IPAddress, used with wifi control
- */
-extern String ipAddress;
-#endif
 //Define if you want debug output to be redirected to `Seria`l
 #define SERIAL_DEBUG
 

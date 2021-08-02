@@ -93,4 +93,51 @@ ControlType getControlType(const uint8_t &id);
  */
 ScreenType getScreenType(const uint8_t &id);
 
+/**
+ * Read configuration from SD card
+ */
+void readConfiguration();
+
+/**
+ * Saves configuration to SD card
+ */
+void saveConfiguration();
+
+
+//SETTINGs
+#define CONFIGURATION_VERSION 1
+//WIFI
+/**
+ * SSID of WIFI network, configured
+ */
+extern String wifiSsid;
+
+/**
+ * Password of wifi network
+ */
+extern String wifiPassword;
+
+/**
+ * Wifi hostname - It will always start with 'VISS_'
+ */
+
+extern String wifiHostname;
+/**
+ * Port for the server to listen on wifi
+ */
+extern int wifiPort;
+#ifdef WIFI_SUPPORT
+/**
+ * Current IPAddress, used with wifi control
+ */
+extern String ipAddress;
+#endif
+
+//Bluetooth
+/**
+ * Bluetooth device name
+ */
+extern String bluetoothDeviceName;
+
+
 #endif //VISORV3_CONSTANTSANDSETTINGS_H

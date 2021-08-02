@@ -166,5 +166,6 @@ void processIncomingS0E(const shared_ptr<S0EControlSet> &pointer) {
 }
 
 void processIncomingS0F(const shared_ptr<S0FExternalControlData> &pointer) {
-
+    Serial.println("Playing animation with number " + String(pointer->getNumberToPlay()));
+    //TODO
 }

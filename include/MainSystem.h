@@ -11,7 +11,6 @@
 #include "ConstantsAndSettings.h"
 #include "control/Packets.h"
 #include "control/Definitions.h"
-#include "ConstantsAndSettings.h"
 #include "libraries/PxMatrix.h"
 #include "libraries/Max7219Screen.h"
 #include "libraries/WSControl.h"
@@ -347,17 +346,17 @@ public:
     /**
      * Executes SD card setup
      */
-        static void testSD() {
-            if (!SD_MMC.begin("/sdcard", true)) {
-                Serial.println("Card Mount Failed");
-                return;
-            }
-            uint8_t cardType = SD_MMC.cardType();
+    static void beginAndTestSD() {
+        if (!SD_MMC.begin("/sdcard", true)) {
+            Serial.println("Card Mount Failed");
+            return;
+        }
+        uint8_t cardType = SD_MMC.cardType();
 
-            if (cardType == CARD_NONE) {
-                Serial.println("No SD_MMC card attached");
-                return;
-            }
+        if (cardType == CARD_NONE) {
+            Serial.println("No SD_MMC card attached");
+            return;
+        }
 
             Serial.print("SD_MMC Card Type: ");
             if (cardType == CARD_MMC) {
@@ -370,11 +369,13 @@ public:
                 Serial.println("UNKNOWN");
             }
 
-            uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-            Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
-            Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-            Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
-        }
+        uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+        Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+        Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
+        Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
+
+        readConfiguration();
+    }
 
 #endif
 
@@ -399,9 +400,7 @@ public:
 #ifdef FAN_QC_CONTROL
         qc3FanControl.test();
 #endif
-#ifdef SD_SUPPORT
-        testSD();
-#endif
+
 #ifdef OLED_SUPPORT //TODO TEST MUST ME MADE USING I2C SCANNER
         oledControl.test();
 #endif

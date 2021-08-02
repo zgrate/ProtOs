@@ -11,6 +11,7 @@ String ipAddress = "";
 bool isRunning = true;
 int wifiPort = 48999;
 
+String bluetoothDeviceName = "ZBeepBooperLE";
 #ifdef SERIAL_DEBUG
 
 void debugPrint(const String &text) {
@@ -141,11 +142,15 @@ String getCapabilitiesJson() {
 
 DynamicJsonDocument getDocumentToSave() {
     DynamicJsonDocument doc(JSON_DOC_CAPA);
+    doc["version"] = CONFIGURATION_VERSION;
     auto obj = doc.createNestedObject("network_connection");
     obj["ssid"] = wifiSsid;
     obj["pass"] = wifiPassword;
     obj["port"] = wifiPort;
     obj["hostname"] = wifiHostname;
+
+    auto obj2 = doc.createNestedObject("bluetooth_connection");
+    obj2["device_name"] = bluetoothDeviceName;
     return doc;
 }
 
@@ -156,6 +161,24 @@ void saveConfiguration() {
     file.close();
 }
 
+void copyFile(const String &from, const String &to) {
+    if (!SD_MMC.exists(from)) {
+        return;
+    }
+    if (SD_MMC.exists(to)) {
+        SD_MMC.remove(to);
+    }
+    auto source = SD_MMC.open(from, "r");
+    auto target = SD_MMC.open(to, "w");
+
+    byte b[2048];
+    size_t r;
+    while ((r = source.read(b, 2048)) != 0) {
+        target.write(b, r);
+    }
+    source.close();
+    target.close();
+}
 
 void readConfiguration() {
     if (!SD_MMC.exists(CONFIGURATION_FILE)) {
@@ -166,7 +189,15 @@ void readConfiguration() {
         auto file = SD_MMC.open(CONFIGURATION_FILE, "r");
         deserializeJson(doc, file);
         file.close();
-
+        int version = doc["version"];
+        if (version != CONFIGURATION_VERSION) {
+            Serial.println("Old configuration!");
+            copyFile(CONFIGURATION_FILE, CONFIGURATION_FILE + String(".backup"));
+            saveConfiguration();
+            file = SD_MMC.open(CONFIGURATION_FILE, "r");
+            deserializeJson(doc, file);
+            file.close();
+        }
         const char *ssid = doc["network_connection"]["ssid"];
         wifiSsid = ssid;
         const char *password = doc["network_connection"]["pass"];
@@ -174,7 +205,7 @@ void readConfiguration() {
         wifiPort = doc["network_connection"]["port"];
         const char *hostname = doc["network_connection"]["hostname"];
         wifiHostname = hostname;
+        const char *bluetoothDevice = doc["bluetooth_connection"]["device_name"];
+        bluetoothDeviceName = bluetoothDevice;
     }
-
-
 }

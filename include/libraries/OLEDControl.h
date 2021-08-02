@@ -45,7 +45,7 @@ public:
 
     }
 
-    void reset() {
+    void clear() {
         oled.clear();
     }
 
@@ -53,6 +53,11 @@ public:
         oled.println(line.c_str());
     }
 
+    void setLine(const String &line, const int &lineNumber) {
+        oled.clearLine(lineNumber);
+        oled.setCursor(0, lineNumber);
+        oled.println(line);
+    }
 
 };
 #endif
