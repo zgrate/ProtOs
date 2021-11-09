@@ -27,6 +27,7 @@
 
 
 #ifdef PX_MATRIX_SCREEN
+
 //void mainPxScreenThread();
 #endif
 namespace main_ns {
@@ -66,9 +67,20 @@ namespace main_ns {
     void forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet);
 
     /**
-     *
+     * Read input state from a pin - designed for a dip switches and Analog input
+     * @param pinNumber Pin number
      */
-    bool readInputState(int pinNumber);
+    bool readInputState(const int &pinNumber);
+
+    /**
+     * Prints message on internal screen
+     * @param lineNumber Line number, defaults to 0
+     */
+    void printOnExternalScreen(const String &line, const int &lineNumber, const bool &update = true);
+
+    void load_animation(const char *string);
+
+    void load_animation_from_number(int number);
 }
 
 class LoadedData {
@@ -79,82 +91,89 @@ private:
     uint8_t version;
     uint8_t flags;
     uint8_t fps;
-    uint8_t unused[2]{};
 
-    unsigned long maxFrames;
-    uint8_t maxSizeX, maxSizeY;
+
+    uint16_t maxFrames;
+    //uint8_t maxSizeX, maxSizeY;
     uint8_t *maxData;
-    int maxFrameSize{};
+    uint16_t maxFrameSize;
 
-    unsigned long wsFrames;
-    uint8_t wsSizeX, wsSizeY;
-    uint8_t *wsData;
-    int wsFrameSize = 0;
+//    unsigned long wsFrames;
+//    uint8_t wsSizeX, wsSizeY;
+//    uint8_t *wsData;
+//    int wsFrameSize = 0;
 
-    bool pxStreaming;
-    unsigned long pxFrames;
-    uint8_t pxSizeX, pxSizeY;
-    uint8_t *pxData;
+    bool pxStreaming = true;
+    unsigned short pxFrames;
+    //uint8_t pxSizeX, pxSizeY;
+//    uint8_t *pxData = new uint8_t[0];
     String pxFileName;
     File pxFile;
-    uint8_t pxFileStart = 0;
-    int pxFrameSize = 0;
+    uint8_t pxFileStart = 1;
+    uint16_t pxFrameSize = 0;
+    bool initialized = false;
 
 
 public:
+
+
     int getMaxFrameSize() const {
         return maxFrameSize;
     }
 
-    int getWsFrameSize() const {
+/*    int getWsFrameSize() const {
         return wsFrameSize;
-    }
+    }*/
 
     int getPxFrameSize() const {
         return pxFrameSize;
     }
 
     ~LoadedData() {
-        if (maxData != nullptr) {
-            free(maxData);
-        }
-        if (wsData != nullptr) {
-            free(wsData);
-        }
-        if (pxData != nullptr) {
-            free(pxData);
-        }
+//        if (maxData != nullptr) {
+//            free(maxData);
+//        }
+//        if (wsData != nullptr) {
+//            free(wsData);
+//        }
         if (pxFile) {
             pxFile.close();
         }
     }
 
+    bool isInitialized() const;
+
     LoadedData() {
+        initialized = false;
         packetLength = 0;
         fileName = "";
-        animationName = "";
         version = 0;
+        animationName = "";
         flags = 0;
         fps = 0;
-        unused[0] = 0;
-        unused[1] = 0;
 
         maxFrames = 0;
-        maxSizeX = 0;
-        maxSizeY = 0;
+
+        //maxSizeX = 0;
+        //   maxSizeY = 0;
+
+        /**
+         * Max frame size
+         */
+        maxFrameSize = 0;
         maxData = nullptr;
 
-        wsFrames = 0;
-        wsSizeX = 0;
-        wsSizeY = 0;
-        wsData = nullptr;
+//        wsFrames = 0;
+//        wsSizeX = 0;
+//        wsSizeY = 0;
+//        wsData = nullptr;
 
         pxStreaming = false; //todo
         pxFrames = 0;
-        pxSizeX = 0;
-        pxSizeY = 0;
+//        pxSizeX = 0;
+//        pxSizeY = 0;
 
-        pxData = nullptr;
+        //pxData = nullptr;
         pxFileName = "";
         pxFile = File();
 
@@ -163,8 +182,25 @@ public:
 
     void printContents();
 
-    void loadFile(String filename);
+#define MAX_HEADER 1
+#define PX_HEADER 2
 
+#define PX_INFO_FILE 100
+#define PX_STREAMING_FILE 101
+
+    const String &getAnimationName() const;
+
+    /**
+     * Loads the file from SD card to the memory
+     * @param filename filename
+     * @return True if success False if not success
+     */
+    bool loadFile(const String &filename);
+
+    /**
+     * Returns speed in Frames Per Second for this animation
+     * @return int as FPS
+     */
     int getFPS() const {
         return fps;
     }
@@ -174,9 +210,9 @@ public:
     }
 
 
-    uint8_t *getPXFrameStartAddress(unsigned long currentFramePx) {
-        return pxData + currentFramePx * pxFrameSize;
-    }
+//    uint8_t *getPXFrameStartAddress(unsigned long currentFramePx) {
+//        return pxData + currentFramePx * pxFrameSize;
+//    }
 
     unsigned long getPxFrames() const {
         return pxFrames;
@@ -190,13 +226,13 @@ public:
         return maxData + frame * maxFrameSize;
     }
 
-    unsigned long getWsFrames() const {
-        return wsFrames;
-    }
-
-    uint8_t *getWSFrameStartAddress(unsigned long frame) {
-        return wsData + frame * wsFrameSize;
-    }
+//    unsigned long getWsFrames() const {
+//        return wsFrames;
+//    }
+//
+//    uint8_t *getWSFrameStartAddress(unsigned long frame) {
+//        return wsData + frame * wsFrameSize;
+//    }
 
     void seekPXMatrixData(int deltaPosition);
 
@@ -217,7 +253,7 @@ private:
     /**
      * Stores current loaded data from the SD Card
      */
-    LoadedData *data = nullptr;
+    LoadedData currentData = LoadedData();
 
     /**
      * Helper variables for main loop
@@ -406,7 +442,13 @@ public:
 #endif
 
         Serial.println("Tests COMPLETED!");
-    };
+    }
+
+
+    void startSystem() {
+        oledControl.clear();
+        loadNewFile(START_FILE);
+    }
 
 };
 

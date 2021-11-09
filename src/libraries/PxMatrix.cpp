@@ -505,7 +505,6 @@ void PxMatrixScreen::spi_init() {
     // delay(100);
 
 
-
 }
 
 void PxMatrixScreen::begin(uint8_t row_pattern) {
@@ -937,7 +936,14 @@ void PxMatrixScreen::writeFrameFromBuffer(uint8_t *buffer, int bufferLength) {
 }
 
 uint8_t *PxMatrixScreen::getBufferAddress() {
+#ifdef PxMATRIX_double_buffer
+    if(_active_buffer)
+        return PxMATRIX_buffer2[0];
+    else
+        return PxMATRIX_buffer[0];
+#else
     return PxMATRIX_buffer[0];
+#endif
 }
 
 AnimationMode PxMatrixScreen::getAnimationMode() {

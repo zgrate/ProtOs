@@ -139,5 +139,8 @@ extern String ipAddress;
  */
 extern String bluetoothDeviceName;
 
-
+/**
+ * Define supported data version
+ */
+#define LOADED_DATA_VERSION 1
 #endif //VISORV3_CONSTANTSANDSETTINGS_H

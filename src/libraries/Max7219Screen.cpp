@@ -44,12 +44,14 @@ uint8_t SIMPLE_VISOR_OFFSETS[32][24] = {
 };
 #endif
 
+uint8_t *GLOBAL_MAX_BUFFOR;
 Max7219Screen::Max7219Screen() : Adafruit_GFX(MAX_WIDTH * 8, MAX_HEIGHT * 8) {
     init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
          PIN_OUTPUT_MAX_CS, (ConnectionType) MAX_CONNECTION_TYPE); //TODO:
 }
 
 void Max7219Screen::begin() {
+    GLOBAL_MAX_BUFFOR = new uint8_t[MAX_MATRICES_NUMBER * 8 * MAX_FRAMES_BUFFER];
     init(MAX_MATRICES_NUMBER, MAX_WIDTH, MAX_HEIGHT, PIN_OUTPUT_MAX_MOSI, PIN_OUTPUT_MAX_CLK,
          PIN_OUTPUT_MAX_CS, (ConnectionType) MAX_CONNECTION_TYPE);
     pinMode(spiClk, OUTPUT);
@@ -61,6 +63,9 @@ void Max7219Screen::begin() {
     maxSpiClass.setDataMode(SPI_MODE0);
     sendStartupCommands();
     initialized = true;
+    //TODO
+
+
     clear();
 
 }
@@ -70,7 +75,7 @@ void Max7219Screen::sendStartupCommands() {
     lastStartupCommandsSend = millis();
     sendCommand(MAX7219_TEST, 0x00);
     sendCommand(MAX7219_DECODE_MODE, 0x00); // Disable BCD mode.
-    sendCommand(MAX7219_BRIGHTNESS, MAX_DEFAULT_BRIGHTNESS);  // Use lowest intensity.
+    sendCommand(MAX7219_BRIGHTNESS, this->brightness);  // Use lowest intensity.
     sendCommand(MAX7219_SCAN_LIMIT, 0x0f);  // Scan all digits.
     sendCommand(MAX7219_SHUTDOWN, 0x01);
 }
@@ -106,10 +111,19 @@ void Max7219Screen::drawPixel(int16_t x, int16_t y, uint16_t color) {
 #endif
 }
 
+
 void Max7219Screen::display() {
+#ifdef MAX_STARTUP_REFRESH
+    if ((millis() - lastStartupCommandsSend) > MAX_STARTUP_REFRESH) {
+        lastStartupCommandsSend = millis();
+        sendStartupCommands();
+        delay(1);
+    }
+#endif
     pinMode(spiClk, OUTPUT);
     pinMode(spiSS, OUTPUT);
     pinMode(spiMosi, OUTPUT);
+
     for (int i = 1; i < 9; i++) {
         digitalWrite(spiSS, LOW);
         for (int dev = matricesNumber - 1; dev >= 0; dev--) {
@@ -167,8 +181,11 @@ void Max7219Screen::drawPixels(const std::vector<Pixel> &vector) {
 }
 
 void Max7219Screen::setBrightness(const uint8_t &target) {
-    if (target >= 0 && target <= 8)
-        sendCommand(MAX7219_BRIGHTNESS, target);  // Use lowest intensity
+
+    if (target >= 0 && target <= 8) {
+        this->brightness = target;
+        sendCommand(MAX7219_BRIGHTNESS, target);
+    }
 }
 
 #endif

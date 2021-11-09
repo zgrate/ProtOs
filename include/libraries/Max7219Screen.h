@@ -25,6 +25,7 @@ extern uint8_t SIMPLE_VISOR_OFFSETS[32][24];
 #include <SPI.h>
 #include "control/Definitions.h"
 
+extern uint8_t *GLOBAL_MAX_BUFFOR;
 
 class Max7219Screen : public Adafruit_GFX, public Screen {
 
@@ -90,6 +91,7 @@ private:
 
     int offsets[MAX_WIDTH * 8][MAX_HEIGHT * 8];
     uint8_t maxBuffer[MAX_MATRICES_NUMBER * 8];
+
     uint8_t matricesNumber = MAX_MATRICES_NUMBER;
     int8_t spiMosi = PIN_OUTPUT_MAX_MOSI;
     int8_t spiClk = PIN_OUTPUT_MAX_CLK;
@@ -138,6 +140,8 @@ private:
     }
 
 
+private:
+    uint8_t brightness = MAX_DEFAULT_BRIGHTNESS;
 };
 
 #endif

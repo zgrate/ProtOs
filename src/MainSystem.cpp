@@ -4,12 +4,29 @@
 
 #include "MainSystem.h"
 
+#include <memory>
+
 #include "libraries/PxMatrix.h"
 #include "control/BluetoothManager.h"
 #include "control/ControlFunctions.h"
 
 
 TaskHandle_t Task1;
+
+unsigned long lastRefresh = 0;
+
+void refreshScreen() {
+    if ((millis() - lastRefresh) > DATA_REFRESH_TIME) {
+        lastRefresh = millis();
+        String voltage = MainSystem::getMainSystem().getCurrentVoltageSensor().requestData("");
+        String temperature = MainSystem::getMainSystem().getThermometerSensor().requestData("");
+        uint8_t fanspeed = MainSystem::getMainSystem().getQC3FanControl().getFanSpeed();
+        main_ns::printOnExternalScreen(voltage, 0, false);
+        main_ns::printOnExternalScreen(temperature, 1, false);
+        main_ns::printOnExternalScreen("Fan: " + String(fanspeed), 2, true);
+    }
+
+}
 
 void mainTask(void *pvParameters) {
     Serial.print("Task1 running on core ");
@@ -19,7 +36,9 @@ void mainTask(void *pvParameters) {
         //WifiManagerInstance.loop();
         //TODO: OTHERS
         MainSystem::getMainSystem().mainDisplayLoop();
-       // wifiLoop(&MainSystem::getMainSystem().getWifiManager());
+        MainSystem::getMainSystem().getOledControl().oledLoop();
+        // refreshScreen();
+        // wifiLoop(&MainSystem::getMainSystem().getWifiManager());
         vTaskDelay(10);
         yield();
     }
@@ -34,9 +53,9 @@ void MainSystem::setup() {
             "Task1",     /* name of task. */
             10000,       /* Stack size of task */
             nullptr,        /* parameter of the task */
-            1,           /* priority of the task */
+            0,           /* priority of the task */
             &Task1,      /* Task handle to keep track of created task */
-            1);          /* pin task to core 0 */
+            0);          /* pin task to core 0 */
 }
 
 
@@ -50,19 +69,33 @@ void MainSystem::loop() {
 }
 
 void MainSystem::loadNewFile(const String &filename) {
-    if (data != nullptr) {
-        delete data;
+
+#ifdef BLUETOOTH_SUPPORT
+    BluetoothClientInstance.stopAdvertising();
+#endif
+    //auto loadingdata = std::shared_ptr<LoadedData>(new LoadedData());
+    //loadingdata->loadFile(filename); //TODO
+    if (!currentData.loadFile(filename))
+        return;
+    if (currentData.isInitialized()) {
+        Serial.println("Data loaded! ");
+        main_ns::printOnExternalScreen(currentData.getAnimationName(), 5, true);
+        currentData.printContents();
+        currentFramePx = 0;
+        currentFrameMax = 0;
+        currentFrameWs = 0;
+        frameTime = 1000 / currentData.getFPS();
+
+        //currentData = loadingdata;
+
     }
-    data = new LoadedData();
-    //data->loadFile(filename); //TODO
-    currentFramePx = 0;
-    currentFrameMax = 0;
-    currentFrameWs = 0;
-    frameTime = 1000 / data->getFPS();
+#ifdef BLUETOOTH_SUPPORT
+    BluetoothClientInstance.startAdvertising();
+#endif
 
 }
 
-bool main_ns::readInputState(int pinNumber) {
+bool main_ns::readInputState(const int &pinNumber) {
     Serial.println(analogRead(pinNumber));
     return analogRead(pinNumber) < 2000;
 }
@@ -71,6 +104,11 @@ void main_ns::forwardPacket(const std::shared_ptr<ClientBoundPacket> &packet) {
 #ifdef WIFI_SUPPORT
     if (packet->getPipeline() == PacketPipeline::WIFI) {
         MainSystem::getMainSystem().getWifiManager().sendPacket(packet);
+    }
+#endif
+#ifdef BLUETOOTH_SUPPORT
+    if (packet->getPipeline() == PacketPipeline::BLUETOOTH) {
+        BluetoothClientInstance.sendPacket(packet);
     }
 #endif
 }
@@ -124,37 +162,51 @@ void MainSystem::beginAll() {
 
 }
 
+unsigned long timer = 0;
+bool loaded = false;
+bool single_frame_px_animation = false;
 
 void MainSystem::mainDisplayLoop() {
-    if (data == nullptr) {
+    if (timer == 0) {
+        timer = millis();
+    } else if (!loaded && (millis() - timer) > 3000) {
+        startSystem();
+        loaded = true;
+    }
+    if (!currentData.isInitialized()) {
         vTaskDelay(10);
         return;
     }
     if (millis() - lastFrame >= frameTime) {
         lastFrame = millis();
 #ifdef PX_MATRIX_SCREEN
-        if (data->getPxFrames() != 0) {
-            if (!data->isStreaming()) {
-                getPxMatrixScreen().writeFrameFromBuffer(data->getPXFrameStartAddress(currentFramePx),
-                                                         data->getPxFrameSize());
-            } else {
-                if (currentFramePx == 0) {
-                    data->seekPXMatrixData(0);
-                }
-                data->readPxToBuffer(getPxMatrixScreen().getBufferAddress());
+        if (currentData.getPxFrames() != 0 && !single_frame_px_animation) {
+            if (currentFramePx == 0) {
+                currentData.seekPXMatrixData(0);
             }
+            currentData.readPxToBuffer(getPxMatrixScreen().getBufferAddress());
+            //getPxMatrixScreen().showBuffer();
+
+//            if (!currentData->isStreaming()) {
+////                getPxMatrixScreen().writeFrameFromBuffer(data->getPXFrameStartAddress(currentFramePx),
+////                                                         data->getPxFrameSize());
+////TODO: Only streaming for now!
+
+//            } else {
+//
+//            }
             currentFramePx++;
-            if (currentFramePx >= data->getPxFrames()) {
+            if (currentFramePx >= currentData.getPxFrames()) {
                 currentFramePx = 0;
             }
         }
 #endif
 #ifdef MAX_MATRIX_SCREEN
-        if (data->getMaxFrames() != 0) {
-            max7219Screen.writeFrameFromBuffer(data->getMaxFrameStartAddress(currentFrameMax),
-                                               data->getMaxFrameSize());
+        if (currentData.getMaxFrames() != 0) {
+            max7219Screen.writeFrameFromBuffer(currentData.getMaxFrameStartAddress(currentFrameMax),
+                                               currentData.getMaxFrameSize());
             currentFrameMax++;
-            if (currentFrameMax >= data->getMaxFrames()) {
+            if (currentFrameMax >= currentData.getMaxFrames()) {
                 currentFrameMax = 0;
             }
         }
@@ -265,11 +317,30 @@ void main_ns::control(const uint8_t &controlId, const String &stringValue) {
 #endif
 #ifdef PX_BRIGHTNESS_CONTROL
     if (controlId == PX_BRIGHTNESS_CONTROL) {
-        Serial.println("Setting brigthness...");
+        Serial.println("Setting PX brigthness...");
         MainSystem::getMainSystem().getPxMatrixScreen().setBrightness(stringValue.toInt());
     }
 #endif
+#ifdef MAX_BRIGTHNESS_CONTROL
+    if (controlId == MAX_BRIGTHNESS_CONTROL) {
+        Serial.println("Setting MAX Brightness... ");
+        MainSystem::getMainSystem().getMaxScreen().setBrightness(stringValue.toInt());
+    }
+#endif
+}
 
+void main_ns::printOnExternalScreen(const String &line, const int &lineNumber, const bool &update) {
+#ifdef OLED_SUPPORT
+    MainSystem::getMainSystem().getOledControl().setLine(line, lineNumber, update);
+#endif
+}
+
+void main_ns::load_animation(const char *string) {
+    MainSystem::getMainSystem().loadNewFile("/" + String(string) + ".zgd");
+}
+
+void main_ns::load_animation_from_number(int number) {
+    MainSystem::getMainSystem().loadNewFile("/" + String(number) + ".zgd");
 }
 
 void LoadedData::printContents() {
@@ -291,21 +362,17 @@ void LoadedData::printContents() {
     Serial.print("Frames: ");
     Serial.print(maxFrames);
     Serial.print(" with size ");
-    Serial.print(maxSizeX);
-    Serial.print("x");
-    Serial.print(maxSizeY);
-    Serial.print(" with a memory address ");
-    Serial.println((long) maxData);
-
-    Serial.println("WS: ");
-    Serial.print("Frames: ");
-    Serial.print(wsFrames);
-    Serial.print(" with size ");
-    Serial.print(wsSizeX);
-    Serial.print("x");
-    Serial.print(wsSizeY);
-    Serial.print(" with a memory address ");
-    Serial.println((long) wsData);
+    Serial.print(maxFrameSize);
+//
+//    Serial.println("WS: ");
+//    Serial.print("Frames: ");
+//    Serial.print(wsFrames);
+//    Serial.print(" with size ");
+//    Serial.print(wsSizeX);
+//    Serial.print("x");
+//    Serial.print(wsSizeY);
+//    Serial.print(" with a memory address ");
+//    Serial.println((long) wsData);
 
     Serial.println("PX: ");
     Serial.print("PX MODE: ");
@@ -313,11 +380,8 @@ void LoadedData::printContents() {
     Serial.print(" Frames: ");
     Serial.print(pxFrames);
     Serial.print(" with size ");
-    Serial.print(pxSizeX);
-    Serial.print("x");
-    Serial.print(pxSizeY);
     Serial.print(" with a memory address ");
-    Serial.println((long) pxData);
+
     Serial.print("PX FileName: ");
     Serial.print(pxFileName);
     Serial.print(" PX position: ");
@@ -326,187 +390,6 @@ void LoadedData::printContents() {
 
 }
 
-//void LoadedData::loadFile(String filename) {
-//    this->fileName = filename;
-//    Serial.print("Opening file ");
-//    Serial.println(filename);
-//    File mainFile = SD_MMC.open("/" + filename);
-//    if (mainFile.available() > 0) {
-//        uint8_t d[4];
-//        mainFile.read(d, 4);
-//        packetLength = 0 + (d[0] << 24) + (d[1] << 16) + (d[2] << 8) + (d[3]);
-//        version = mainFile.read();
-//
-//        if (version != DATA_VERSION) {
-//            mainFile.close();
-//            return;
-//        }
-//
-//        // uint8_t stringLength = mainFile.read();
-//        animationName = mainFile.readStringUntil((char) 0);
-//
-////            mainFile.readBytes(c, stringLength);
-////
-////            for(char cha : c)
-////            {
-////                Serial.print((int)cha);
-////                Serial.print(" ");
-////            }
-//
-//
-//
-////            for(int i = 0; i < stringLength; i++){
-////
-////                c[i] = (char)mainFile.read();
-////                Serial.print(c[i]);
-////                Serial.print(", ");
-////            }
-//        Serial.println();
-//        Serial.println(animationName);
-//
-////            animationName = String(c);
-//
-//        flags = mainFile.read();
-//        fps = mainFile.read();
-//        mainFile.read(unused, 2);
-//
-//        while (mainFile.available() > 0 && mainFile.position() < packetLength) {
-//            uint8_t type = mainFile.read();
-//            if (type == MAX_DATA) {
-//                Serial.println("MAX_DATA");
-//                uint8_t temp = mainFile.read();
-//                maxFrames = temp;
-//                maxSizeX = mainFile.read();
-//                maxSizeY = mainFile.read();
-//
-//                maxFrameSize = maxSizeX * maxSizeY / 8;
-//
-//                uint8_t calculatedFrames = maxFrames;
-//
-//                while (calculatedFrames > 0) {
-//
-//                    void *pVoid = (realloc(maxData, maxFrameSize * calculatedFrames));
-//                    if (pVoid != nullptr) {
-//                        maxData = static_cast<uint8_t *>(pVoid);
-//                        break;
-//                    } else {
-//                        calculatedFrames--;
-//                    }
-//                }
-//                if (calculatedFrames == 0) {
-//                    ESP.restart();
-//                }
-//                mainFile.read(maxData, calculatedFrames * maxFrameSize);
-//                mainFile.seek(mainFile.position() + (maxFrames - calculatedFrames) * maxFrameSize);
-//                maxFrames = calculatedFrames;
-//            } else if (type == WS_DATA) {
-//                Serial.println("WS_DATA");
-//                uint8_t temp = mainFile.read();
-//                wsFrames = temp;
-//                wsSizeX = mainFile.read();
-//                wsSizeY = mainFile.read();
-//
-//                wsFrameSize = wsSizeX * wsSizeY * 3;
-//
-//                uint8_t calculatedFrames = wsFrames;
-//
-//                while (calculatedFrames > 0) {
-//
-//                    void *pVoid = (realloc(wsData, wsFrameSize * calculatedFrames));
-//                    if (pVoid != nullptr) {
-//                        wsData = static_cast<uint8_t *>(pVoid);
-//                        break;
-//                    } else {
-//                        calculatedFrames--;
-//                    }
-//                }
-//                if (calculatedFrames == 0) {
-//                    ESP.restart();
-//                }
-//                mainFile.read(wsData, calculatedFrames * wsFrameSize);
-//                mainFile.seek(mainFile.position() + (wsFrames - calculatedFrames) * wsFrameSize);
-//                wsFrames = calculatedFrames;
-//            } else if (type == PX_IN_FILE_DATA) {
-//                Serial.println("PX_IN_FILE");
-//                pxMode = PX_IN_FILE_DATA;
-//                uint8_t temp = mainFile.read();
-//                pxFrames = temp;
-//                pxSizeX = mainFile.read();
-//                pxSizeY = mainFile.read();
-//
-//                pxFrameSize = pxSizeX * pxSizeY * 3 / 8;
-//
-//                uint8_t calculatedFrames = pxFrames;
-//
-//                while (calculatedFrames > 0) {
-//
-//                    void *pVoid = (realloc(pxData, pxFrameSize * calculatedFrames));
-//                    if (pVoid != nullptr) {
-//                        pxData = static_cast<uint8_t *>(pVoid);
-//                        break;
-//                    } else {
-//                        calculatedFrames--;
-//                    }
-//                }
-//                if (calculatedFrames == 0) {
-//                    ESP.restart();
-//                }
-//                mainFile.read(pxData, calculatedFrames * pxFrameSize);
-//                mainFile.seek(mainFile.position() + (pxFrames - calculatedFrames) * pxFrameSize);
-//                pxFrames = calculatedFrames;
-//            } else if (type == PX_EXTERNAL_STREAMING) {
-//                Serial.println("PX_EXTERNAL_STREAM");
-//                //uint8_t len = mainFile.read();
-//
-////                    char s[len];
-////                    for(int i = 0; i < len; i++){
-////                        s[i] = (char)mainFile.read();
-////                    }
-////                    pxFileName = String(s);
-//                pxFileName = mainFile.readStringUntil((char) 0);
-//                if (!SD_MMC.exists("/" + pxFileName)) {
-//                    Serial.println(pxFileName + " not found!");
-//                    pxFileName = filename.substring(0, filename.lastIndexOf('.')) + ".ser";
-//                    if (!SD_MMC.exists("/" + pxFileName)) {
-//                        Serial.println("ERROR: FILE NOT FOUND!");
-//                        return;
-//                    }
-//                }
-//
-//                pxFile = SD_MMC.open("/" + pxFileName);
-//
-//                if (pxFile.available() > 0) {
-//                    pxMode = PX_EXTERNAL_STREAMING;
-//                    uint8_t r = pxFile.read();
-//
-//                    if (r != PX_EXTERNAL_STREAMING) {
-//                        Serial.println("ERROR: THIS IS NOT PX_EXTERNAL_STREAMING!");
-//                        return;
-//                    }
-//                    uint8_t framesBytes[4];
-//                    pxFile.read(framesBytes, 4);
-//
-//                    //pxFrames = *((uint32_t *)framesBytes);
-//                    pxFrames = framesBytes[3] | (framesBytes[2] << 8) | (framesBytes[1] << 16) | (framesBytes[0] << 24);
-//                    //pxFrames += (((uint32_t)d[0])<<24);
-//                    //pxFrames += (((uint32_t)d[1])<<16);
-//                    //pxFrames += (((uint32_t)d[2])<<8);
-//                    //pxFrames += (((uint32_t)d[3]));
-//
-//                    pxSizeX = pxFile.read();
-//                    pxSizeY = pxFile.read();
-//                    pxFrameSize = pxSizeX * pxSizeY * 3 / 8;
-//
-//                    pxFileStart = pxFile.position();
-//
-//                }
-//
-//            }
-//        }
-//
-//    }
-//}
-//
 void LoadedData::seekPXMatrixData(int deltaPosition) {
     if (isStreaming()) {
         pxFile.seek(pxFileStart + deltaPosition);
@@ -517,6 +400,139 @@ void LoadedData::readPxToBuffer(uint8_t *buffer) {
     if (isStreaming() && pxFile.available() > 0) {
         pxFile.read(buffer, pxFrameSize);
     }
+}
+
+bool LoadedData::isInitialized() const {
+    return initialized;
+}
+
+const String &LoadedData::getAnimationName() const {
+    return animationName;
+}
+
+bool LoadedData::loadFile(const String &filename) {
+    Serial.println(String("LOADING FILE " + filename));
+    if (!SD_MMC.exists(filename)) {
+        Serial.println("File not exists!");
+        return false;
+    }
+    /**
+     * Loading important stuff
+     */
+    auto file = SD_MMC.open(filename);
+    if (!file) {
+        Serial.println("Unknown file error!");
+        return false;
+    }
+    this->fileName = filename;
+    uint8_t type = file.read();
+    if (type != PX_INFO_FILE) {
+        Serial.println("File is not PX_INFO!");
+        file.close();
+        return false;
+    }
+    //this->packetLength = readULong(file); //TODO: Use this variable to help determine if we have a reading problem
+    this->version = (file.read());
+    if (this->version != LOADED_DATA_VERSION) {
+        Serial.println("Version don't match!");
+        file.close();
+        return false;
+    }
+    this->animationName = readString(file);
+
+    this->flags = file.read();
+    this->fps = file.read();
+
+    /**
+     * Start reading headers!
+     */
+    Serial.println(file.available());
+
+    while (file.available() > 0) {
+        uint8_t readType = file.read();
+        Serial.println("Header " + String(readType));
+        if (readType == MAX_HEADER) {
+            Serial.println("Loading MAX Data....");
+            this->maxFrames = readShort(file); //MAX 65k (lower!)
+
+            if (this->maxFrames > 0) {
+                this->maxFrameSize = readShort(file);
+                Serial.println(this->maxFrameSize);
+#ifdef MAX_MATRIX_SCREEN
+                /**
+                 * Max Loading
+                 */
+                if (this->maxFrameSize != MAX_MATRICES_NUMBER * 8 || this->maxFrames > MAX_FRAMES_BUFFER) {
+                    file.seek(file.position() + this->maxFrameSize * maxFrames);
+                    this->maxFrames = 0;
+                    this->maxFrameSize = 0;
+                    Serial.println("Error loading MAX Data!");
+                    //return false;
+                    //TODO: Send Error ""up""
+                } else {
+                    Serial.println(file.available());
+                    this->maxData = GLOBAL_MAX_BUFFOR;
+                    for (int i = 0; i < maxFrames; i++) {
+                        file.read(maxData + maxFrameSize * i, maxFrameSize);
+                    }
+                    Serial.println("Loaded MAX Data!");
+                    Serial.println(file.available());
+                }
+
+#else
+                file.seek(file.position() + this->maxFrameSize * maxFrames);
+                    this->maxFrames = 0;
+                        //TODO: Send Error ""up""
+#endif
+
+            }
+        } else if (readType == PX_HEADER) {
+            Serial.println("Loading PX Data...");
+            this->pxFrames = readShort(file);
+            Serial.println(this->pxFrames);
+            if (this->pxFrames > 0) {
+                this->pxStreaming = file.read();
+                Serial.println(this->pxStreaming);
+                this->pxFileName = readString(file);
+                Serial.println(this->pxFileName);
+                this->pxFrameSize = readShort(file);
+                if (this->pxFrameSize != PxMATRIX_FRAME_SIZE) {
+                    Serial.println("PxMatrix Frame size is invalid!");
+                    return false;
+                    //file.seek(file.position() + this->pxFrameSize * pxFrames);
+                    //TODO
+                }
+                Serial.println("Dir");
+                vTaskDelay(10);
+                int lastpos = filename.lastIndexOf("/");
+                String pxFileDir = String(String(filename.substring(0, lastpos + 1)) + this->pxFileName);
+                Serial.println(pxFileDir);
+                delay(100);
+
+                if (!SD_MMC.exists(pxFileDir)) {
+                    //TODO - ERROR
+                    Serial.println("Streaming file don't exists");
+                    return false;
+                } else {
+                    if (this->pxFile) {
+                        this->pxFile.close();
+                    }
+                    this->pxFile = SD_MMC.open(pxFileDir);
+
+                }
+                Serial.println("PX Loaded!!");
+            }
+        } else {
+            Serial.println("Critical error reading the file! This is probably not a valid file!");
+            return false;
+        }
+
+    }
+    file.close();
+    initialized = true;
+    return true;
+
+
 }
 
 #ifdef PX_MATRIX_SCREEN

@@ -34,6 +34,7 @@
 #include <BLE2902.h>
 #include <Arduino.h>
 #include <bitset>
+#include <MainSystem.h>
 #include "map"
 #include "libraries/bytestream/ByteStream.h"
 #include "Packets.h"
@@ -44,9 +45,14 @@ class BluetoothManager {
 
     BLEServer *pServer = NULL;
     BLECharacteristic *pCharacteristic = NULL;
-    bool deviceConnected = false;
-    bool oldDeviceConnected = false;
-    uint32_t value = 0;
+
+    BLECharacteristic *fileDirChara = NULL;
+    BLECharacteristic *currentAnimationChara = NULL;
+    BLECharacteristic *setAnimationChara = NULL;
+    BLECharacteristic *fanChara = NULL;
+    BLECharacteristic *brightnessChara = NULL;
+
+    bool bluetoothSetuped = false;
 
     static String show_binary(unsigned int u, int num_of_bits) {
         String a = "";
@@ -86,27 +92,12 @@ class BluetoothManager {
 
         }
 
-        void onWrite(BLECharacteristic *chara) override {
-            byte *data = chara->getData();
-            auto sh = readShort(data);
+        void onWrite(BLECharacteristic *chara) override;
+    };
 
-            ByteStream stream = ByteStream(data + 2, sh);
-
-            auto packet = constructPacket(stream, PacketPipeline::BLUETOOTH);
-            processIncomingPacket(packet);
-
-            return;
-//            if (BluetoothManager::checkPin(data[1], data[0])) {
-//                Serial.println("PIN CORRECT!");
-//                //Serial.println(show_binary(data[2], 8).c_str());
-//                //Serial.println(show_binary(data[3], 8).c_str());
-//                //processData(data[2], data);
-//            } else {
-//                Serial.println("INCORRECT PIN!");
-//            }
-//            chara->setValue("ASDF");
-//            chara->notify();
-        }
+    class SetAnimationCallback : public BLECharacteristicCallbacks {
+    public:
+        void onWrite(BLECharacteristic *pCharacteristic) override;
     };
 
 //AT+BAND807D3AA2B9DA
@@ -135,6 +126,7 @@ class BluetoothManager {
         Serial.println(pData[0]);
     }
 
+    BLERemoteCharacteristic *c;
 public:
     void setupBLE() {
         Serial.println("Initializing Bluetooth...");
@@ -155,15 +147,32 @@ public:
                 BLECharacteristic::PROPERTY_WRITE |
                 BLECharacteristic::PROPERTY_NOTIFY
         );
-
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
         // Create a BLE Descriptor
-        pCharacteristic->addDescriptor(new BLE2902());
+        //pCharacteristic->addDescriptor(new BLE2902());
         pCharacteristic->setCallbacks(new BluetoothCallback(this));
 
+//        fileDirChara = pService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_LIST_FILE_UUID, BLECharacteristic::PROPERTY_READ);
+//        currentAnimationChara = pService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_CURRENT_ANIMATION_UUID, BLECharacteristic::PROPERTY_READ);
+//        currentAnimationChara->addDescriptor(new BLE2902());
+//        setAnimationChara = pService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_SET_ANIMATION_UUID, BLECharacteristic::PROPERTY_WRITE);
+//        setAnimationChara->setCallbacks(new SetAnimationCallback());
+//        setAnimationChara->addDescriptor(new BLE2902());
+//        fanChara = pService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_FAN_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+//        fanChara->setCallbacks(new SetAnimationCallback());//TODO
+//        brightnessChara = pService->createCharacteristic(BLUETOOTH_CHARACTERISTIC_BRIGHTNESS_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+//        brightnessChara->setCallbacks(new SetAnimationCallback());//TODO
+
+
+
+        //    pCharacteristic->setValue("aaaaaaaaaaaaaaaaaaaa");
+        // pCharacteristic->setValue("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab");
+//        currentAnimationChara->setValue("/currentAnimation");
+//        fanChara->setValue("100");
+//        brightnessChara->setValue("20");
         // Start the service
         pService->start();
-
+        bluetoothSetuped = true;
         // Start advertising
         BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
         pAdvertising->addServiceUUID(BLUETOOTH_SERVICE_UUID);
@@ -172,6 +181,17 @@ public:
         BLEDevice::startAdvertising();
         Serial.println("Waiting a client connection to notify...");
     }
+
+    void stopAdvertising() {
+//    /    if(bluetoothSetuped)
+//            BLEDevice::stopAdvertising();
+    }
+
+    void startAdvertising() {
+//        if(bluetoothSetuped)
+//            BLEDevice::startAdvertising();
+    }
+
 
     void loopBLE() {
         // notify changed value
@@ -194,6 +214,31 @@ public:
 //            // do stuff here on connecting
 //            oldDeviceConnected = deviceConnected;
 //        }
+    }
+
+    bool sendPacket(const shared_ptr<ClientBoundPacket> &sharedPtr) {
+        debugPrint("preparing the packet....");
+        uint16_t length = 0;
+        uint8_t *buffor = sharedPtr->getPacket(&length);
+        debugPrint("Length of the packet is " + String(length));
+        uint8_t crc = crc8(buffor, length);
+        debugPrint("CRC is " + String(crc));
+        delay(1);
+        auto *buff = new uint8_t[6 + length];
+        writeShort(4 + length, buff);
+        buff[2] = sharedPtr->getPacketId();
+        buff[3] = length;
+        buff[4] = (length >> 8);
+        std::memcpy(buff + 5, buffor, length);
+        buff[5 + length] = crc;
+        pCharacteristic->setValue(buff, 6 + length);
+        pCharacteristic->notify();
+        debugPrint("SEND PACKET!");
+        delay(1000);
+
+        delete[] buffor;
+        delete[] buff;
+        return true;
     }
 };
 

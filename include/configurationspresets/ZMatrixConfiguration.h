@@ -8,6 +8,9 @@
 
 //MODULES CONFIGURATION
 
+#define START_FILE "/8.zgd"
+#define DATA_REFRESH_TIME 5000
+
 //Capabilities:
 //Here, you can define, what is supported. Defined number is an ID of a device. It should be max 255 per control, sensor and screen
 
@@ -106,6 +109,10 @@
 
 // Defines the maxBuffer width / the maximum width of the matrix
 #define PxMATRIX_WIDTH 128
+
+// Frame size for streaming
+#define PxMATRIX_FRAME_SIZE (PxMATRIX_HEIGHT*PxMATRIX_WIDTH*3/8)
+
 //Number of matrices in the row
 #define PxMatrix_WIDTH_NUMBER 2
 
@@ -117,6 +124,7 @@
 
 //Default brightness of Matrix (0-255)
 #define PxMATRIX_DEFAULT_BRIGHTNESS 128
+
 
 //Mux delay of PX Matrix
 #define PxMATRIX_MUX_DELAY 10
@@ -157,6 +165,8 @@
 
 //Default MAX brightness
 #define MAX_DEFAULT_BRIGHTNESS 3
+
+#define MAX_FRAMES_BUFFER 50
 
 //Unfortunately, MAX matrices need to be initialized.
 // If you experience blocks of MAXes (for example screen getting fullbrigthness), you can define,
@@ -230,6 +240,11 @@
 #define BLUETOOTH_SERVICE_UUID        "c70ab98a-5fd8-49ac-b370-76b49d821cad"
 //Characteristics for BTLE
 #define BLUETOOTH_CHARACTERISTIC_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f99508e"
+#define BLUETOOTH_CHARACTERISTIC_LIST_FILE_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f99508f"
+#define BLUETOOTH_CHARACTERISTIC_CURRENT_ANIMATION_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f995090"
+#define BLUETOOTH_CHARACTERISTIC_SET_ANIMATION_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f995091"
+#define BLUETOOTH_CHARACTERISTIC_FAN_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f995092"
+#define BLUETOOTH_CHARACTERISTIC_BRIGHTNESS_UUID "85eae7bc-2ae3-4bd3-8763-a43e4f995093"
 
 
 //Define if you want global Bluetooth instance

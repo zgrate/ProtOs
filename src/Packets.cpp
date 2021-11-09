@@ -121,9 +121,11 @@ uint64_t readULongLong(Stream &s) {
 
 String readString(Stream &s) {
     uint16_t length = readShort(s);
-    char *buffer[length];
-    s.readBytes(reinterpret_cast<char *>(buffer), length); //TODO - Check
-    return String(reinterpret_cast<const char *>(buffer)); //TODO - WTF CHECK
+    Serial.println("Reading string of length" + String(length));
+    char buffer[length + 1];
+    s.readBytes(buffer, length); //TODO - Check
+    buffer[length] = '\0';
+    return String(buffer); //TODO - WTF CHECK
 }
 
 void writeShort(const uint16_t &number, uint8_t *bytes, const uint16_t &from) {

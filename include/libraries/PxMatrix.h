@@ -10,6 +10,8 @@ BSD license, check license.txt for more information
 #ifndef _PxMATRIX_H
 #define _PxMATRIX_H
 
+//#define PxMATRIX_double_buffer
+
 #include "ConstantsAndSettings.h"
 
 
