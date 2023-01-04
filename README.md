@@ -1,6 +1,7 @@
 # PROTOS SOFTWARE
 
-ESP32 Software for controlling visor
+ESP32 Software for controlling visors
+![photo_2022-06-12_10-27-19](https://user-images.githubusercontent.com/1495919/210665920-68ea80b4-d69e-4914-ac09-edf42960cf59.jpg)
 
 ### CURRENTLY SUPPORTED DEVICES
 
